@@ -1,0 +1,15 @@
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\bin\Debug\net8.0\MTCG_Project.exe
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\bin\Debug\net8.0\MTCG_Project.deps.json
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\bin\Debug\net8.0\MTCG_Project.runtimeconfig.json
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\bin\Debug\net8.0\MTCG_Project.dll
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\bin\Debug\net8.0\MTCG_Project.pdb
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.AssemblyInfoInputs.cache
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.AssemblyInfo.cs
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.csproj.CoreCompileInputs.cache
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.sourcelink.json
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.dll
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\refint\MTCG_Project.dll
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.pdb
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\MTCG_Project.genruntimeconfig.cache
+C:\Users\Ken\Desktop\MTCG_Sanga\MTCG_Project\MTCG_Project\obj\Debug\net8.0\ref\MTCG_Project.dll
