@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCG_Project
+namespace MTCG_Project.Classes.Card
 {
-    public delegate void HttpSvrEventHandler(object sender, HttpSvrEventArgs e)
+    internal class Spell_Card : Card
     {
     }
 }

@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCG_Project
+namespace MTCG_Project.Network
 {
     public sealed class HttpSvr
     {
@@ -17,7 +17,7 @@ namespace MTCG_Project
         {
             if (Active) return;
             Active = true;
-            _Listener = new (IPAddress.Parse("127.0.0.1"). 12000);
+            _Listener = new(IPAddress.Parse("127.0.0.1"). 12000);
             _Listener.Start();
 
             byte[] buf = new byte[256];
@@ -27,7 +27,7 @@ namespace MTCG_Project
                 TcpClient client = _Listener.AcceptTcpClient();
 
                 string data = string.Empty;
-                while(client.GetStream().DataAvailable || string.IsNullOrWhiteSpace(data))
+                while (client.GetStream().DataAvailable || string.IsNullOrWhiteSpace(data))
                 {
                     int read = client.GetStream().Read(buf, 0, buf.Length);
                     //data += Encoding.UTF8.GetString(buf, 0, read);
