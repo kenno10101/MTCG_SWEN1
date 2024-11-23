@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCG_Project.Classes.Stats
+namespace MTCG_Project.Network
 {
-    internal class Scoreboard
+    internal class Routes
     {
     }
 }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCG_Project.Classes.Card
+namespace MTCG_Project.Models.Stats
 {
-    internal class Spell_Card : Card
+    internal class Stats
     {
     }
 }

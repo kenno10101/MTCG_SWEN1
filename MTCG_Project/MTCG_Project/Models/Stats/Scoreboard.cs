@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCG_Project.Classes.Battle
+namespace MTCG_Project.Models.Stats
 {
-    internal class Battle
+    internal class Scoreboard
     {
     }
 }
