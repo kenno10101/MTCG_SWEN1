@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCG_Project.Network
+namespace MTCG_Project.Handler
 {
-    public delegate void HttpSvrEventHandler(object sender, HttpSvrEventArgs e)
+    internal class SessionHandler
     {
     }
 }
