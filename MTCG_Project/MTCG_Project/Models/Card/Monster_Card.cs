@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MTCG_Project.Interfaces;
-using static MTCG_Project.Misc.Enums
+using static MTCG_Project.Misc.Enums;
 
 namespace MTCG_Project.Models.Card
 {

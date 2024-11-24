@@ -9,6 +9,7 @@ using MTCG_Project.Models.User;
 using System.Net;
 using System.Text.Json.Nodes;
 using MTCG_Project.Exceptions;
+using System.Reflection.Metadata;
 
 namespace MTCG_Project.Handler
 {
@@ -16,11 +17,14 @@ namespace MTCG_Project.Handler
     {
         public override bool Handle(HttpSvrEventArgs e)
         {
-            if ((e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST"))
+            bool is_CreateUserRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST");
+            bool is_QueryUsersRequest = e.Path.StartsWith("/users") && (e.Method == "GET");
+
+            if (is_CreateUserRequest)
             {                                                                   // POST /users will create a user object
                 return _CreateUser(e);
             }
-            else if (e.Path.StartsWith("/users/") && (e.Method == "GET"))        // GET /users/UserName will query a user
+            else if (is_QueryUsersRequest)        // GET /users/UserName will query a user
             {
                 return _QueryUser(e);
             }
@@ -41,10 +45,10 @@ namespace MTCG_Project.Handler
                 {
                     // create user object
                     User.Create(
-                        (string)json["username"],
-                        "1234",
-                        (string)json["name"] ?? "Max Mustermann",
-                        (string)json["email"] ?? "test@test.at");
+                        (string) json["username"]!,
+                        (string)json["password"]!,
+                        (string?) json["name"] ?? "Max Mustermann",
+                        (string?) json["email"] ?? "test@test.at");
                     status = HttpStatusCodes.OK;
                     reply = new JsonObject()
                     {
@@ -68,7 +72,38 @@ namespace MTCG_Project.Handler
 
         private static bool _QueryUser(HttpSvrEventArgs e)
         {
-            return false;
+            JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
+            int status = HttpStatusCodes.BAD_REQUEST;
+
+            try
+            {
+                if (User._Users.Count < 1)
+                {
+                    throw new Exception("No users registered.");
+                }
+
+                int i = 0;
+                foreach (KeyValuePair<string, User> user in User._Users)
+                {
+                    JsonObject? userResponse = new JsonObject(){
+                        ["user_UserName"] = user.Value.UserName,
+                        ["user_Password"] = user.Value.Password,
+                        ["user_FullName"] = user.Value.FullName,
+                        ["user_EMail"] = user.Value.EMail
+                    };
+                    reply.Add("user" + (i++), userResponse);
+                }
+                status = HttpStatusCodes.OK;
+                reply["success"] = true;
+                reply["message"] = "Query success";
+            }
+            catch (Exception ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error."};
+            }
+
+            e.Reply(status, reply?.ToJsonString());
+            return true;
         }
     }
 }

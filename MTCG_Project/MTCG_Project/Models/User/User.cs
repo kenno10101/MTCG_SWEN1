@@ -16,7 +16,8 @@ namespace MTCG_Project.Models.User
 {
     public sealed class User
     {
-        private static Dictionary<string, User> _Users = new();
+        // TO BE REPLACED WITH DB, temporary in memory DB
+        public static Dictionary<string, User> _Users = new();
 
         /// <summary>Gets the user name.</summary>
         public string UserName
@@ -69,31 +70,34 @@ namespace MTCG_Project.Models.User
         {
             if (_Users.ContainsKey(userName))
             {
-                throw new UserException("User name already exists.");
+                throw new UserException("Username already exists.");
             }
 
             User user = new()
             {
                 UserName = userName,
                 FullName = fullName,
-
+                Password = password,
                 EMail = eMail
             };
 
+            // TO BE REPLACED WITH DB, add to in memory DB
             _Users.Add(user.UserName, user);
         }
 
         public static (bool Success, string Token) Logon(string userName, string password)
         {
-            if (_Users.ContainsKey(userName))
+            if (!_Users.ContainsKey(userName))
             {
-                if (_Users[userName].Password == password)
-                {
-                    return (true, Token._CreateTokenFor(_Users[userName]));
-                }
+                throw new UserException("User doesn't exist.");
+            }
+            if (_Users[userName].Password != password)
+            {
+                return (false, string.Empty);
             }
 
-            return (false, string.Empty);
+            return (true, Token._CreateTokenFor(_Users[userName]));
+            
         }
     }
 }
