@@ -12,13 +12,14 @@ namespace MTCG_Project.Network
     {
         protected TcpClient _Client;
 
-        public HttpSvrEventArgs(TcpClient client, string data)
+        public HttpSvrEventArgs(TcpClient client, string plainMessage)
         {
             _Client = client;
-            _Data = data;
+
+            PlainMessage = plainMessage;
             Payload = string.Empty;
 
-            string[] lines = data.Replace("\r\n", "\n").Split('\n');
+            string[] lines = plainMessage.Replace("\r\n", "\n").Split('\n');
             bool inheaders = true;
             List<HttpHeader> headers = new();
 
@@ -49,7 +50,7 @@ namespace MTCG_Project.Network
 
             Headers = headers.ToArray();
         }
-        public string _Data
+        public string PlainMessage
         {
             get; protected set;
         } = string.Empty;
@@ -64,10 +65,10 @@ namespace MTCG_Project.Network
             get; protected set;
         } = string.Empty;
 
-        public HttpHeaders[] Headers
+        public virtual HttpHeader[] Headers
         {
             get; protected set;
-        } = Array.Empty<HttpHeaders>();
+        } = Array.Empty<HttpHeader>();
 
         public string Payload
         {
