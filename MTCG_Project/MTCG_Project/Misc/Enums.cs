@@ -6,8 +6,18 @@ using System.Threading.Tasks;
 
 namespace MTCG_Project.Misc
 {
-    public class ElementTypes
+    public class Enums
     {
+        public enum Monster
+        {
+            Goblin,
+            Dragon,
+            Wizard,
+            Ork,
+            Knight,
+            Kraken,
+            FireElf
+        }
         public enum Element
         {
             Water,

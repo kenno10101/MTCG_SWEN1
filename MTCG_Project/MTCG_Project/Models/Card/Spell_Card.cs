@@ -5,8 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Misc;
-using static MTCG_Project.Misc.ElementTypes;
-using static MTCG_Project.Misc.MonsterTypes;
+using static MTCG_Project.Misc.Enums;
 
 namespace MTCG_Project.Models.Card
 {
