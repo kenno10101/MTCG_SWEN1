@@ -5,6 +5,7 @@ namespace MTCG_Project
 {
     internal class Program
     {
+        public const bool ALLOW_DEBUG_TOKEN = true;
         static void Main(string[] args)
         {
             HttpSvr svr = new();

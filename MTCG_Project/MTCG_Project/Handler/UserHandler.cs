@@ -18,15 +18,20 @@ namespace MTCG_Project.Handler
         public override bool Handle(HttpSvrEventArgs e)
         {
             bool is_CreateUserRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST");
-            bool is_QueryUsersRequest = e.Path.StartsWith("/users") && (e.Method == "GET");
+            bool is_QueryUserRequest = e.Path.StartsWith("/users/") && (e.Method == "GET");
+            bool is_UpdateUserRequest = e.Path.StartsWith("/users/") && (e.Method == "PUT");
 
             if (is_CreateUserRequest)
             {                                                                   // POST /users will create a user object
                 return _CreateUser(e);
             }
-            else if (is_QueryUsersRequest)        // GET /users/UserName will query a user
+            else if (is_QueryUserRequest)        // GET /users/UserName will query a user
             {
                 return _QueryUser(e);
+            }
+            else if (is_UpdateUserRequest)
+            {
+                return _UpdateUser(e);
             }
 
             return false;
@@ -72,34 +77,96 @@ namespace MTCG_Project.Handler
 
         private static bool _QueryUser(HttpSvrEventArgs e)
         {
+            JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request."};
+            int status = HttpStatusCodes.BAD_REQUEST;
+
+            try
+            {
+                (bool Success, User? User) ses = Token.Authenticate_Request(e);
+
+                if (!ses.Success)
+                {
+                    status = HttpStatusCodes.UNAUTHORIZED;
+                    throw new Exception("Unauthorized");
+                }
+
+                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+                User? user = User.Get(username_from_path);
+
+                JsonObject? userResponse = new JsonObject(){
+                    ["user_UserName"] = user.UserName,
+                    ["user_Password"] = user.Password,
+                    ["user_FullName"] = user.FullName,
+                    ["user_EMail"] = user.EMail
+                };
+                reply.Add("user", userResponse);
+                
+                status = HttpStatusCodes.OK;
+                reply["success"] = true;
+                reply["message"] = "Query success";
+            }
+            catch (UserException ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message };
+            }
+            catch (Exception ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error."};
+            }
+
+            e.Reply(status, reply?.ToJsonString());
+            return true;
+        }
+
+        private static bool _UpdateUser(HttpSvrEventArgs e)
+        {
+
             JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
             int status = HttpStatusCodes.BAD_REQUEST;
 
             try
             {
-                if (User._Users.Count < 1)
+                (bool Success, User? User) ses = Token.Authenticate_Request(e);
+
+                if (!ses.Success)
                 {
-                    throw new Exception("No users registered.");
+                    status = HttpStatusCodes.UNAUTHORIZED;
+                    throw new Exception("Unauthorized");
                 }
 
-                int i = 0;
-                foreach (KeyValuePair<string, User> user in User._Users)
+                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+                User? user_to_edit = User.Get(username_from_path);
+
+                JsonNode? json = JsonNode.Parse(e.Payload);
+                if (json != null)
                 {
-                    JsonObject? userResponse = new JsonObject(){
-                        ["user_UserName"] = user.Value.UserName,
-                        ["user_Password"] = user.Value.Password,
-                        ["user_FullName"] = user.Value.FullName,
-                        ["user_EMail"] = user.Value.EMail
+                    // create user object
+                    User.Update(
+                        user_to_edit,
+                        (string?)json["username"] ?? user_to_edit.UserName,
+                        (string?)json["password"] ?? user_to_edit.Password,
+                        (string?)json["name"] ?? user_to_edit.FullName,
+                        (string?)json["email"] ?? user_to_edit.EMail
+                        );
+                    status = HttpStatusCodes.OK;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = true,
+                        ["message"] = "User updated."
                     };
-                    reply.Add("user" + (i++), userResponse);
                 }
+
                 status = HttpStatusCodes.OK;
                 reply["success"] = true;
-                reply["message"] = "Query success";
+                reply["message"] = "Update success";
+            }
+            catch (UserException ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message };
             }
             catch (Exception ex)
             {
-                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error."};
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error." };
             }
 
             e.Reply(status, reply?.ToJsonString());

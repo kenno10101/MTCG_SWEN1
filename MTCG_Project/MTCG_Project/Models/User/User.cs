@@ -17,7 +17,7 @@ namespace MTCG_Project.Models.User
     public sealed class User
     {
         // TO BE REPLACED WITH DB, temporary in memory DB
-        public static Dictionary<string, User> _Users = new();
+        private static Dictionary<string, User> _Users = new();
 
         /// <summary>Gets the user name.</summary>
         public string UserName
@@ -54,16 +54,18 @@ namespace MTCG_Project.Models.User
 
         public void Save(string token)
         {
-            (bool Success, User? User) auth = Token.Authenticate(token);
-            if (auth.Success)
+            (bool Success, User? User) auth = Token.Authenticate_Token(token);
+            if (!auth.Success)
             {
-                if (auth.User!.UserName != UserName)
-                {
-                    throw new SecurityException("Trying to change other user's data.");
-                }
-                // Save data.
+                throw new AuthenticationException("Not authenticated.");
             }
-            else { new AuthenticationException("Not authenticated."); }
+            // if user uses another user's token
+            if (auth.User!.UserName != UserName)
+            {
+                throw new SecurityException("Trying to change other user's data.");
+            }
+
+            // Save data.
         }
 
         public static void Create(string userName, string password, string fullName = "", string eMail = "")
@@ -83,6 +85,44 @@ namespace MTCG_Project.Models.User
 
             // TO BE REPLACED WITH DB, add to in memory DB
             _Users.Add(user.UserName, user);
+        }
+
+        public static User Get(string userName)
+        {
+            if (!_Users.ContainsKey(userName))
+            {
+                throw new UserException("User doesn't exist.");
+            }
+
+            User User_to_edit = _Users[userName];
+
+            return User_to_edit;
+        }
+
+        public static void Update(User user_to_edit, string userName, string password, string fullName, string eMail)
+        {
+            if (!_Users.ContainsKey(user_to_edit.UserName))
+            {
+                throw new UserException("User doesn't exist.");
+            }
+            if (user_to_edit.UserName != userName)
+            {
+                _Users.Remove(user_to_edit.UserName);
+                User new_user = new()
+                {
+                    UserName = userName,
+                    FullName = fullName,
+                    Password = password,
+                    EMail = eMail
+                };
+                _Users.Add(userName, new_user);
+            }
+            else
+            {
+                user_to_edit.Password = password ?? user_to_edit.Password;
+                user_to_edit.FullName = fullName ?? user_to_edit.FullName;
+                user_to_edit.EMail = eMail ?? user_to_edit.EMail;
+            }
         }
 
         public static (bool Success, string Token) Logon(string userName, string password)
