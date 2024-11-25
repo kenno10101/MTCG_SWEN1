@@ -68,11 +68,11 @@ namespace MTCG_Project.Models.User
             // Save data.
         }
 
-        public static void Create(string userName, string password, string fullName = "", string eMail = "")
+        public static bool Create(string userName, string password, string fullName = "", string eMail = "")
         {
             if (_Users.ContainsKey(userName))
             {
-                throw new UserException("Username already exists.");
+                return false;
             }
 
             User user = new()
@@ -85,13 +85,14 @@ namespace MTCG_Project.Models.User
 
             // TO BE REPLACED WITH DB, add to in memory DB
             _Users.Add(user.UserName, user);
+            return true;
         }
 
         public static User Get(string userName)
         {
             if (!_Users.ContainsKey(userName))
             {
-                throw new UserException("User doesn't exist.");
+                return null;
             }
 
             User User_to_edit = _Users[userName];
@@ -99,11 +100,11 @@ namespace MTCG_Project.Models.User
             return User_to_edit;
         }
 
-        public static void Update(User user_to_edit, string userName, string password, string fullName, string eMail)
+        public static bool Update(User user_to_edit, string userName, string password, string fullName, string eMail)
         {
             if (!_Users.ContainsKey(user_to_edit.UserName))
             {
-                throw new UserException("User doesn't exist.");
+                return false;
             }
             if (user_to_edit.UserName != userName)
             {
@@ -123,13 +124,14 @@ namespace MTCG_Project.Models.User
                 user_to_edit.FullName = fullName ?? user_to_edit.FullName;
                 user_to_edit.EMail = eMail ?? user_to_edit.EMail;
             }
+            return true;
         }
 
         public static (bool Success, string Token) Logon(string userName, string password)
         {
             if (!_Users.ContainsKey(userName))
             {
-                throw new UserException("User doesn't exist.");
+                return (false, null);
             }
             if (_Users[userName].Password != password)
             {

@@ -37,19 +37,21 @@ namespace MTCG_Project.Handler
                 {
                     (bool success, string token) login = User.Logon((string)json["username"]!, (string)json["password"]!);
 
+                    
                     if (login.success)
                     {
                         reply = new JsonObject() { ["success"] = true, ["message"] = "Login success", ["token"] = login.token};
                         status = HttpStatusCodes.OK;
-                    } 
+                    }
+                    else if (login.token == null)
+                    {
+                        status = HttpStatusCodes.NOT_FOUND;
+                        throw new UserException("User doesn't exist.");
+                    }
                     else
                     {
                         status = HttpStatusCodes.UNAUTHORIZED;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = false,
-                            ["message"] = "Login failed"
-                        };
+                        throw new UserException("Login failed");
                     }
                 }
             }
