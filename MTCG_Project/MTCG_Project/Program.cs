@@ -8,6 +8,8 @@ namespace MTCG_Project
         public const bool ALLOW_DEBUG_TOKEN = true;
         static void Main(string[] args)
         {
+
+            DBHandler.connectDB();
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming; //(sender, e) => { Handler.HandleEvent(e); };
 
