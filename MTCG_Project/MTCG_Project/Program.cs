@@ -9,7 +9,7 @@ namespace MTCG_Project
         static void Main(string[] args)
         {
 
-            DBHandler.connectDB();
+            //DBHandler.connectDB();
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming; //(sender, e) => { Handler.HandleEvent(e); };
 
@@ -18,20 +18,6 @@ namespace MTCG_Project
         private static void Svr_Incoming(object sender, HttpSvrEventArgs e)
         {
             Handler.Handler.HandleEvent(e);
-
-            /*
-            Console.WriteLine(e.Method);
-            Console.WriteLine(e.Path);
-            Console.WriteLine();
-            foreach(HttpHeader i in e.Headers)
-            {
-                Console.WriteLine(i.Name + ": " + i.Value);
-            }
-            Console.WriteLine();
-            Console.WriteLine(e.Payload);
-
-            e.Reply(HttpStatusCode.OK, "Yo Baby!");
-            */
         }
 
     }

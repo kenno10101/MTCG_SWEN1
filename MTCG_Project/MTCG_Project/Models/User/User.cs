@@ -11,6 +11,8 @@ using MTCG_Project.Exceptions;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Models.Card;
 using MTCG_Project.Network;
+using MTCG_Project.Repository;
+using Npgsql;
 
 namespace MTCG_Project.Models.User
 {
@@ -68,11 +70,11 @@ namespace MTCG_Project.Models.User
             // Save data.
         }
 
-        public static bool Create(string userName, string password, string fullName = "", string eMail = "")
+        public static async Task Create(string userName, string password, string fullName = "", string eMail = "")
         {
             if (_Users.ContainsKey(userName))
             {
-                return false;
+                return;
             }
 
             User user = new()
@@ -85,7 +87,13 @@ namespace MTCG_Project.Models.User
 
             // TO BE REPLACED WITH DB, add to in memory DB
             _Users.Add(user.UserName, user);
-            return true;
+            
+            var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
+            await using var conn = new NpgsqlConnection(connString);
+            await conn.OpenAsync();
+            
+            UserRepository user_db = new UserRepository(conn);
+            await user_db.Create(user);
         }
 
         public static User Get(string userName)
@@ -100,31 +108,21 @@ namespace MTCG_Project.Models.User
             return User_to_edit;
         }
 
-        public static bool Update(User user_to_edit, string userName, string password, string fullName, string eMail)
+        public async static Task Update (string old_userName, string new_userName, string password, string fullName, string eMail)
         {
-            if (!_Users.ContainsKey(user_to_edit.UserName))
+            User updated_user;
+            updated_user = new()
             {
-                return false;
-            }
-            if (user_to_edit.UserName != userName)
-            {
-                _Users.Remove(user_to_edit.UserName);
-                User new_user = new()
-                {
-                    UserName = userName,
-                    FullName = fullName,
-                    Password = password,
-                    EMail = eMail
-                };
-                _Users.Add(userName, new_user);
-            }
-            else
-            {
-                user_to_edit.Password = password ?? user_to_edit.Password;
-                user_to_edit.FullName = fullName ?? user_to_edit.FullName;
-                user_to_edit.EMail = eMail ?? user_to_edit.EMail;
-            }
-            return true;
+                UserName = new_userName,
+                Password = password,
+                FullName = fullName,
+                EMail = eMail
+            };
+            var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
+            await using var conn = new NpgsqlConnection(connString);
+            await conn.OpenAsync();
+            UserRepository user_db = new UserRepository(conn);
+            await user_db.Update(updated_user, old_userName);
         }
 
         public static (bool Success, string Token) Logon(string userName, string password)
