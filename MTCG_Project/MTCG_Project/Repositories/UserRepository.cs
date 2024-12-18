@@ -1,3 +1,4 @@
+using MTCG_Project.Exceptions;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Models.User;
 using Npgsql;
@@ -17,13 +18,34 @@ public class UserRepository : IUserRepository
     public async Task Create (User user)
     {
         // Insert some data
-        await using (var cmd = new NpgsqlCommand("INSERT INTO \"users\" (username, password, fullname, email) VALUES (@u, @pw, @f, @em)", _conn))
+        try
         {
-            cmd.Parameters.AddWithValue("u", user.UserName);
-            cmd.Parameters.AddWithValue("pw", user.Password);
-            cmd.Parameters.AddWithValue("f", user.FullName);
-            cmd.Parameters.AddWithValue("em", user.EMail);
-            await cmd.ExecuteNonQueryAsync();
+            await using (var cmd = new NpgsqlCommand(
+                             "INSERT INTO \"users\" (username, password, fullname, email) VALUES (@u, @pw, @f, @em)",
+                             _conn))
+            {
+                cmd.Parameters.AddWithValue("u", user.UserName);
+                cmd.Parameters.AddWithValue("pw", user.Password);
+                cmd.Parameters.AddWithValue("f", user.FullName);
+                cmd.Parameters.AddWithValue("em", user.EMail);
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505")
+        {
+            if (ex.Message.Contains("username", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UserException("A user with this username already exists.");    
+            }
+            else if (ex.Message.Contains("email", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UserException("A user with this email already exists.");    
+            }
+            else
+            {
+                throw new UserException("An error with the DB has occurred.");
+            }
+            
         }
     }
     

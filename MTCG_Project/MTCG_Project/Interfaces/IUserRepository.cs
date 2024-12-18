@@ -7,5 +7,4 @@ public interface IUserRepository
     Task Create(User user);
     Task<User> Get (string username);
     Task Update (User user, string username);
-    // void Delete (int user_id);
 }

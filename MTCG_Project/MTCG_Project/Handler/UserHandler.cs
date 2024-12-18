@@ -10,6 +10,7 @@ using System.Net;
 using System.Text.Json.Nodes;
 using MTCG_Project.Exceptions;
 using System.Reflection.Metadata;
+using Npgsql;
 
 namespace MTCG_Project.Handler
 {
@@ -23,7 +24,7 @@ namespace MTCG_Project.Handler
 
             if (is_CreateUserRequest)
             {                                                                   // POST /users will create a user object
-                return _CreateUser(e);
+                return _CreateUser(e).GetAwaiter().GetResult(); // todo explanation?? was bool before now is Task<bool>, just type cast?
             }
             else if (is_QueryUserRequest)        // GET /users/UserName will query a user
             {
@@ -35,11 +36,10 @@ namespace MTCG_Project.Handler
             }
 
             return false;
-        }   
+        }
 
-        private static bool _CreateUser(HttpSvrEventArgs e)
+        private static async Task<bool> _CreateUser(HttpSvrEventArgs e)
         {
-
             JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
             int status = HttpStatusCodes.BAD_REQUEST;
 
@@ -49,16 +49,11 @@ namespace MTCG_Project.Handler
                 if (json != null)
                 {
                     // create user object
-                    User.Create(
+                    await User.Create(
                         (string) json["username"]!,
                         (string)json["password"]!,
                         (string?) json["name"] ?? "Max Mustermann",
                         (string?) json["email"] ?? "test@test.at");
-                    // if (!user_created)
-                    // {
-                    //     status = HttpStatusCodes.NOT_UNIQUE;
-                    //     throw new UserException("User already exists.");
-                    // }
                     status = HttpStatusCodes.OK;
                     reply = new JsonObject()
                     {
@@ -71,9 +66,9 @@ namespace MTCG_Project.Handler
             {
                 reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                reply = new JsonObject() { ["success"] = false, ["message"] = "Unexpected error." };
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error." };
             }
 
             e.Reply(status, reply?.ToJsonString());
