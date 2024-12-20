@@ -86,14 +86,49 @@ public class UserRepository : IUserRepository
     
     public async Task Update (User user, string old_username)
     {
-        await using (var cmd = new NpgsqlCommand("UPDATE \"users\" SET username = @u, password = @pw, fullname = @f, email = @em WHERE username = @user", _conn))
+        try
         {
-            cmd.Parameters.AddWithValue("user", old_username);
-            cmd.Parameters.AddWithValue("u", user.UserName);
-            cmd.Parameters.AddWithValue("pw", user.Password);
-            cmd.Parameters.AddWithValue("f", user.FullName);
-            cmd.Parameters.AddWithValue("em", user.EMail);
-            await cmd.ExecuteNonQueryAsync();
+            bool usernameChange = old_username != user.UserName;
+            string queryString = usernameChange
+                ? "UPDATE \"users\" SET username = @u, password = @pw, fullname = @f, email = @em WHERE username = @user"
+                : "UPDATE \"users\" SET password = @pw, fullname = @f, email = @em WHERE username = @user";
+            
+            await using (var cmd = new NpgsqlCommand(
+                             queryString,
+                             _conn))
+            {
+                cmd.Parameters.AddWithValue("user", old_username);
+                cmd.Parameters.AddWithValue("pw", user.Password);
+                cmd.Parameters.AddWithValue("f", user.FullName);
+                cmd.Parameters.AddWithValue("em", user.EMail);
+
+                if (usernameChange)
+                {
+                    cmd.Parameters.AddWithValue("u", user.UserName);
+                }
+                int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                if (rowsAffected == 0)
+                {
+                    throw new UserException("The user with the specified username does not exist.");
+                }
+            }
+        }
+        catch (PostgresException ex)
+        {
+            if (ex.SqlState != "23505")
+            {
+                throw new UserException("Error updating User in DB.");
+            }
+
+            if (ex.Message.Contains("username", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UserException("Error updating, user with this username already exists.");    
+            }
+            else if (ex.Message.Contains("email", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UserException("Error updating, user with this email already exists.");    
+            }
         }
     }
 }

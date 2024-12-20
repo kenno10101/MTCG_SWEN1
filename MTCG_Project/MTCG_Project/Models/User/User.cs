@@ -124,19 +124,24 @@ namespace MTCG_Project.Models.User
 
         public static async Task Update (string old_userName, string new_userName, string password, string fullName, string eMail)
         {
-            User updated_user;
-            updated_user = new()
+            try {
+                User updated_user = new()
+                {
+                    UserName = new_userName,
+                    Password = password,
+                    FullName = fullName,
+                    EMail = eMail
+                };
+                var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
+                await using var conn = new NpgsqlConnection(connString);
+                await conn.OpenAsync();
+                UserRepository user_db = new UserRepository(conn);
+                await user_db.Update(updated_user, old_userName);
+            }
+            catch (Exception ex)
             {
-                UserName = new_userName,
-                Password = password,
-                FullName = fullName,
-                EMail = eMail
-            };
-            var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
-            await using var conn = new NpgsqlConnection(connString);
-            await conn.OpenAsync();
-            UserRepository user_db = new UserRepository(conn);
-            await user_db.Update(updated_user, old_userName);
+                throw new UserException(ex.Message);
+            }
         }
         
 
