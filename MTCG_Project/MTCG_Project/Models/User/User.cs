@@ -54,9 +54,17 @@ namespace MTCG_Project.Models.User
         private User()
         { }
 
-        public void Save(string token)
+        public User(string username, string password, string fullname, string email)
         {
-            (bool Success, User? User) auth = Token.Authenticate_Token(token);
+            UserName = username;
+            Password = password;
+            FullName = fullname;
+            EMail = email;
+        }
+
+        public async Task Save(string token)
+        {
+            (bool Success, User? User) auth = await Token.Authenticate_Token(token);
             if (!auth.Success)
             {
                 throw new AuthenticationException("Not authenticated.");
@@ -91,20 +99,27 @@ namespace MTCG_Project.Models.User
             }
             catch (Exception ex)
             {
-                throw new UserException(ex.Message);  // Rethrow the exception to let the caller (UserHandler) handle it
+                throw new UserException(ex.Message);
             }
         }
 
-        public static User Get(string userName)
+        public static async Task<User> Get(string userName)
         {
-            if (!_Users.ContainsKey(userName))
+            try
             {
-                return null;
+                var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
+                await using var conn = new NpgsqlConnection(connString);
+                await conn.OpenAsync();
+            
+                UserRepository user_db = new UserRepository(conn);
+                User user = await user_db.Get(userName);
+                
+                return user;
             }
-
-            User User_to_edit = _Users[userName];
-
-            return User_to_edit;
+            catch (Exception ex)
+            {
+                throw new UserException(ex.Message);
+            }
         }
 
         public static async Task Update (string old_userName, string new_userName, string password, string fullName, string eMail)

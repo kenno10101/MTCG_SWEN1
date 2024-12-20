@@ -17,7 +17,6 @@ public class UserRepository : IUserRepository
     
     public async Task Create (User user)
     {
-        // Insert some data
         try
         {
             await using (var cmd = new NpgsqlCommand(
@@ -51,21 +50,38 @@ public class UserRepository : IUserRepository
     
     public async Task<User> Get (string username)
     {
-        // Retrieve all rows
-        string user_name, password, fullname, email;
-        await using var cmd = new NpgsqlCommand("SELECT * FROM \"users\" WHERE \"username\" = @u", _conn);
-        cmd.Parameters.AddWithValue("u", username);
-        await using (var reader = await cmd.ExecuteReaderAsync())
+        try
         {
-            while (await reader.ReadAsync())
+            string user_name = null, password = null, fullname = null, email = null;
+            await using var cmd = new NpgsqlCommand("SELECT * FROM \"users\" WHERE \"username\" = @u", _conn);
+            cmd.Parameters.AddWithValue("u", username);
+            await using (var reader = await cmd.ExecuteReaderAsync())
             {
-                user_name = reader.GetString(1);
-                password = reader.GetString(2);
-                fullname = reader.GetString(3);
-                email = reader.GetString(4);
+                while (await reader.ReadAsync())
+                {
+                    user_name = reader.GetString(1);
+                    password = reader.GetString(2);
+                    fullname = reader.GetString(3);
+                    email = reader.GetString(4);
+                }
             }
+
+            if (user_name == null || password == null || fullname == null || email == null)
+            {
+                throw new UserException("User not found or incomplete data.");
+            }
+            
+            User user = new User(user_name, password, fullname, email);
+            return user;
         }
-        return null;
+        catch (PostgresException ex)
+        {
+            throw new UserException("Error retrieving data from database");
+        }
+        catch (UserException ex)
+        {
+            throw new UserException(ex.Message);
+        }
     }
     
     public async Task Update (User user, string old_username)

@@ -24,15 +24,15 @@ namespace MTCG_Project.Handler
 
             if (is_CreateUserRequest)
             {                                                                   // POST /users will create a user object
-                return _CreateUser(e).GetAwaiter().GetResult(); // todo explanation?? was bool before now is Task<bool>, just type cast?
+                return _CreateUser(e).GetAwaiter().GetResult();
             }
             else if (is_QueryUserRequest)        // GET /users/UserName will query a user
             {
-                return _QueryUser(e);
+                return _QueryUser(e).GetAwaiter().GetResult();
             }
             else if (is_UpdateUserRequest)
             {
-                return _UpdateUser(e);
+                return _UpdateUser(e).GetAwaiter().GetResult();;
             }
 
             return false;
@@ -54,6 +54,7 @@ namespace MTCG_Project.Handler
                         (string)json["password"]!,
                         (string?) json["name"] ?? "Max Mustermann",
                         (string?) json["email"] ?? "test@test.at");
+                    
                     status = HttpStatusCodes.OK;
                     reply = new JsonObject()
                     {
@@ -75,23 +76,23 @@ namespace MTCG_Project.Handler
             return true;
         }
 
-        private static bool _QueryUser(HttpSvrEventArgs e)
+        private static async Task<bool> _QueryUser(HttpSvrEventArgs e)
         {
             JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request."};
             int status = HttpStatusCodes.BAD_REQUEST;
 
             try
             {
-                (bool Success, User? User) ses = Token.Authenticate_Request(e);
-
-                if (!ses.Success)
-                {
-                    status = HttpStatusCodes.UNAUTHORIZED;
-                    throw new Exception("Unauthorized");
-                }
+                // (bool Success, User? User) ses = Token.Authenticate_Request(e);
+                //
+                // if (!ses.Success)
+                // {
+                //     status = HttpStatusCodes.UNAUTHORIZED;
+                //     throw new Exception("Unauthorized");
+                // }
 
                 string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
-                User? user = User.Get(username_from_path);
+                User? user = await User.Get(username_from_path);
 
                 if(user == null)
                 {
@@ -99,6 +100,7 @@ namespace MTCG_Project.Handler
                     throw new UserException("User doesn't exist.");
                 }
 
+                status = HttpStatusCodes.OK;
                 JsonObject? userResponse = new JsonObject(){
                     ["user_UserName"] = user.UserName,
                     ["user_Password"] = user.Password,
@@ -106,8 +108,6 @@ namespace MTCG_Project.Handler
                     ["user_EMail"] = user.EMail
                 };
                 reply.Add("user", userResponse);
-                
-                status = HttpStatusCodes.OK;
                 reply["success"] = true;
                 reply["message"] = "Query success";
             }
@@ -124,7 +124,7 @@ namespace MTCG_Project.Handler
             return true;
         }
 
-        private static bool _UpdateUser(HttpSvrEventArgs e)
+        private static async Task<bool> _UpdateUser(HttpSvrEventArgs e)
         {
 
             JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
@@ -132,7 +132,7 @@ namespace MTCG_Project.Handler
 
             try
             {
-                (bool Success, User? User) ses = Token.Authenticate_Request(e);
+                (bool Success, User? User) ses = await Token.Authenticate_Request(e);
 
                 if (!ses.Success)
                 {
@@ -141,7 +141,7 @@ namespace MTCG_Project.Handler
                 }
 
                 string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
-                User? user_to_edit = User.Get(username_from_path);
+                User? user_to_edit = await User.Get(username_from_path);
 
                 if (user_to_edit == null)
                 {
