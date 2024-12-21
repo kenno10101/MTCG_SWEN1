@@ -83,16 +83,16 @@ namespace MTCG_Project.Handler
 
             try
             {
-                // (bool Success, User? User) ses = Token.Authenticate_Request(e);
-                //
-                // if (!ses.Success)
-                // {
-                //     status = HttpStatusCodes.UNAUTHORIZED;
-                //     throw new Exception("Unauthorized");
-                // }
 
-                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
-                User? user = await User.Get(username_from_path);
+                (bool Success, User? User) ses = await Token.Authenticate_Request(e);
+
+                if (!ses.Success)
+                {
+                    status = HttpStatusCodes.UNAUTHORIZED;
+                    throw new Exception("Unauthorized");
+                }
+                
+                User? user = ses.User;
 
                 status = HttpStatusCodes.OK;
                 JsonObject? userResponse = new JsonObject(){
@@ -126,16 +126,15 @@ namespace MTCG_Project.Handler
 
             try
             {
+                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+
                 (bool Success, User? User) ses = await Token.Authenticate_Request(e);
 
                 if (!ses.Success)
                 {
                     status = HttpStatusCodes.UNAUTHORIZED;
-                    //throw new Exception("Unauthorized");
+                    throw new Exception("Unauthorized");
                 }
-
-                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
-                
                 JsonNode? json = JsonNode.Parse(e.Payload);
                 if (json != null)
                 {

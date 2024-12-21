@@ -1,27 +1,21 @@
 using MTCG_Project.Exceptions;
+using MTCG_Project.Handler;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Models.User;
 using Npgsql;
 
-namespace MTCG_Project.Repository;
+namespace MTCG_Project.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository
 {
-    
-    private readonly NpgsqlConnection _conn;
-
-    public UserRepository(NpgsqlConnection conn)
+    public static async Task Create (User user)
     {
-        _conn = conn;
-    }
-    
-    public async Task Create (User user)
-    {
+        await using var conn = await DB_connection.connectDB();
         try
         {
             await using (var cmd = new NpgsqlCommand(
                              "INSERT INTO \"users\" (username, password, fullname, email) VALUES (@u, @pw, @f, @em)",
-                             _conn))
+                             conn))
             {
                 cmd.Parameters.AddWithValue("u", user.UserName);
                 cmd.Parameters.AddWithValue("pw", user.Password);
@@ -48,12 +42,13 @@ public class UserRepository : IUserRepository
         }
     }
     
-    public async Task<User> Get (string username)
+    public static async Task<User> Get (string username)
     {
+        await using var conn = await DB_connection.connectDB();
         try
         {
             string user_name = null, password = null, fullname = null, email = null;
-            await using var cmd = new NpgsqlCommand("SELECT * FROM \"users\" WHERE \"username\" = @u", _conn);
+            await using var cmd = new NpgsqlCommand("SELECT * FROM \"users\" WHERE \"username\" = @u", conn);
             cmd.Parameters.AddWithValue("u", username);
             await using (var reader = await cmd.ExecuteReaderAsync())
             {
@@ -71,8 +66,7 @@ public class UserRepository : IUserRepository
                 throw new UserException("User not found or incomplete data.");
             }
             
-            User user = new User(user_name, password, fullname, email);
-            return user;
+            return new User(user_name, password, fullname, email);
         }
         catch (PostgresException ex)
         {
@@ -84,8 +78,9 @@ public class UserRepository : IUserRepository
         }
     }
     
-    public async Task Update (User user, string old_username)
+    public static async Task Update (User user, string old_username)
     {
+        await using var conn = await DB_connection.connectDB();
         try
         {
             bool usernameChange = old_username != user.UserName;
@@ -95,7 +90,7 @@ public class UserRepository : IUserRepository
             
             await using (var cmd = new NpgsqlCommand(
                              queryString,
-                             _conn))
+                             conn))
             {
                 cmd.Parameters.AddWithValue("user", old_username);
                 cmd.Parameters.AddWithValue("pw", user.Password);

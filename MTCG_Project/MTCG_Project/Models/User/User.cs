@@ -11,15 +11,14 @@ using MTCG_Project.Exceptions;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Models.Card;
 using MTCG_Project.Network;
-using MTCG_Project.Repository;
+using MTCG_Project.Repositories;
 using Npgsql;
+using MTCG_Project.Handler;
 
 namespace MTCG_Project.Models.User
 {
     public sealed class User
     {
-        // TO BE REPLACED WITH DB, temporary in memory DB
-        private static Dictionary<string, User> _Users = new();
 
         /// <summary>Gets the user name.</summary>
         public string UserName
@@ -89,13 +88,8 @@ namespace MTCG_Project.Models.User
                     Password = password,
                     EMail = eMail
                 };
-            
-                var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
-                await using var conn = new NpgsqlConnection(connString);
-                await conn.OpenAsync();
-            
-                UserRepository user_db = new UserRepository(conn);
-                await user_db.Create(user);
+
+                await UserRepository.Create(user);
             }
             catch (Exception ex)
             {
@@ -106,15 +100,8 @@ namespace MTCG_Project.Models.User
         public static async Task<User> Get(string userName)
         {
             try
-            {
-                var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
-                await using var conn = new NpgsqlConnection(connString);
-                await conn.OpenAsync();
-            
-                UserRepository user_db = new UserRepository(conn);
-                User user = await user_db.Get(userName);
-                
-                return user;
+            {                            
+                return await UserRepository.Get(userName);
             }
             catch (Exception ex)
             {
@@ -132,11 +119,8 @@ namespace MTCG_Project.Models.User
                     FullName = fullName,
                     EMail = eMail
                 };
-                var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
-                await using var conn = new NpgsqlConnection(connString);
-                await conn.OpenAsync();
-                UserRepository user_db = new UserRepository(conn);
-                await user_db.Update(updated_user, old_userName);
+
+                await UserRepository.Update(updated_user, old_userName);
             }
             catch (Exception ex)
             {
@@ -145,19 +129,21 @@ namespace MTCG_Project.Models.User
         }
         
 
-        public static (bool Success, string Token) Logon(string userName, string password)
+        public static async Task<(bool Success, string Token)> Logon(string userName, string password)
         {
-            if (!_Users.ContainsKey(userName))
+            try
             {
-                return (false, null);
+                User user = await User.Get(userName);
+                if (user.Password != password)
+                {
+                    return (false, string.Empty);
+                }
+                return (true, await Token._CreateTokenFor(user));
             }
-            if (_Users[userName].Password != password)
+            catch (Exception ex)
             {
-                return (false, string.Empty);
+                throw new UserException(ex.Message);
             }
-
-            return (true, Token._CreateTokenFor(_Users[userName]));
-            
         }
     }
 }

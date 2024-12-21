@@ -19,13 +19,13 @@ namespace MTCG_Project.Handler
             bool is_LoginRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/sessions") && (e.Method == "POST");
             if (is_LoginRequest)
             {                                                                   // POST /sessions will create a user object
-                return _Login(e);
+                return _Login(e).GetAwaiter().GetResult();
             }
           
             return false;
         }
 
-        private static bool _Login(HttpSvrEventArgs e)
+        private static async Task<bool> _Login(HttpSvrEventArgs e)
         {
             JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request."};
             int status = HttpStatusCodes.BAD_REQUEST;
@@ -35,33 +35,26 @@ namespace MTCG_Project.Handler
                 JsonNode? json = JsonNode.Parse(e.Payload);
                 if (json != null)
                 {
-                    (bool success, string token) login = User.Logon((string)json["username"]!, (string)json["password"]!);
+                    (bool success, string token) login = await User.Logon((string)json["username"]!, (string)json["password"]!);
 
                     
-                    if (login.success)
-                    {
-                        reply = new JsonObject() { ["success"] = true, ["message"] = "Login success", ["token"] = login.token};
-                        status = HttpStatusCodes.OK;
-                    }
-                    else if (login.token == null)
-                    {
-                        status = HttpStatusCodes.NOT_FOUND;
-                        throw new UserException("User doesn't exist.");
-                    }
-                    else
+                    if (!login.success)
                     {
                         status = HttpStatusCodes.UNAUTHORIZED;
                         throw new UserException("Login failed");
                     }
-                }
+
+                    reply = new JsonObject() { ["success"] = true, ["message"] = "Login success", ["token"] = login.token };
+                    status = HttpStatusCodes.OK;
+            }
             }
             catch (UserException ex)
             {
                 reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                reply = new JsonObject() { ["success"] = false, ["message"] = "Unexpected error."};
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error."};
             }
 
             e.Reply(status, reply?.ToJsonString());

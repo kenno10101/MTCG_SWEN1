@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MTCG_Project.Repositories;
 
 namespace MTCG_Project.Network
 {
@@ -11,53 +12,65 @@ namespace MTCG_Project.Network
     {
         private const string _ALPHABET = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-        internal static Dictionary<string, User> _Tokens = new();
 
-        internal static string _CreateTokenFor(User user)
+        internal static async Task<string> _CreateTokenFor(User user)
         {
-            string rval = string.Empty;
-            Random rnd = new();
-
-            for (int i = 0; i < 24; i++)
+            try 
             {
-                rval += _ALPHABET[rnd.Next(0, 62)];
+
+                string rval = string.Empty;
+                Random rnd = new();
+
+                for (int i = 0; i < 24; i++)
+                {
+                    rval += _ALPHABET[rnd.Next(0, 62)];
+                }
+
+                await TokenRepository.Add(rval, user);
+
+                    return rval;
             }
-
-            _Tokens.Add(rval, user);
-
-            return rval;
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public static async Task<(bool Success, User? User)> Authenticate_Token(string token)
         {
-            if (Program.ALLOW_DEBUG_TOKEN && token.EndsWith("-debug"))
             {
-                string username_debug_token = token.Split('-')[0];
-                User? user = await User.Get(username_debug_token);
+                string username = "";
 
-                return ((user != null), user);
+                if (Program.ALLOW_DEBUG_TOKEN && token.EndsWith("-debug"))
+                {
+                    username = token.Split('-')[0];
+                }
+
+                return (await TokenRepository.HasSession(username), await User.Get(username));
             }
-
-            if (_Tokens.ContainsKey(token))
-            {
-                return (true, _Tokens[token]);
-            }
-
-            return (false, null);
         }
 
         public static async Task<(bool Success, User? User)> Authenticate_Request(HttpSvrEventArgs e)
         {
+
+            string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+
             foreach (HttpHeader i in e.Headers)
             {
-                if (i.Name == "Authorization")
+                if (i.Name != "Authorization")
                 {
-                    if (i.Value[..7] == "Bearer ")
-                    {
-                        return await Authenticate_Token(i.Value[7..].Trim());
-                    }
+                    continue;
+                }
+                if (i.Value[..7] != "Bearer ")
+                {
                     break;
                 }
+                string username_from_token = i.Value[7..].Trim();
+                if (username_from_path != username_from_token)
+                {
+                    break;
+                }
+                return await Authenticate_Token(i.Value[7..].Trim());
             }
 
             return (false, null);

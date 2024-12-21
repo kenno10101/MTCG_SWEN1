@@ -9,7 +9,6 @@ namespace MTCG_Project
         static void Main(string[] args)
         {
 
-            //DBHandler.connectDB();
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming; //(sender, e) => { Handler.HandleEvent(e); };
 
