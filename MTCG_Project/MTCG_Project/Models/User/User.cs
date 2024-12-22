@@ -47,7 +47,7 @@ namespace MTCG_Project.Models.User
 
         private readonly Deck _deck;
 
-        public List<ICard> _stack { get; private set; }
+        public readonly Stack _stack;
 
 
         private User()

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MTCG_Project.Models.User;
+using MTCG_Project.Models.Card;
 using System.Net;
 using System.Text.Json.Nodes;
 using MTCG_Project.Exceptions;
@@ -21,6 +22,7 @@ namespace MTCG_Project.Handler
             bool is_CreateUserRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST");
             bool is_QueryUserRequest = e.Path.StartsWith("/users/") && (e.Method == "GET");
             bool is_UpdateUserRequest = e.Path.StartsWith("/users/") && (e.Method == "PUT");
+            bool is_GetStackFromUserRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/cards") && (e.Method == "GET");
 
             if (is_CreateUserRequest)
             {                                                                   // POST /users will create a user object
@@ -32,7 +34,11 @@ namespace MTCG_Project.Handler
             }
             else if (is_UpdateUserRequest)
             {
-                return _UpdateUser(e).GetAwaiter().GetResult();;
+                return _UpdateUser(e).GetAwaiter().GetResult();
+            }
+            else if (is_GetStackFromUserRequest)
+            {
+                return _GetStackFromUser(e).GetAwaiter().GetResult();
             }
 
             return false;
@@ -146,13 +152,6 @@ namespace MTCG_Project.Handler
                         (string?)json["name"],
                         (string?)json["email"]
                         );
-
-                    status = HttpStatusCodes.OK;
-                    reply = new JsonObject()
-                    {
-                        ["success"] = true,
-                        ["message"] = "User updated."
-                    };
                 }
 
                 status = HttpStatusCodes.OK;
@@ -168,6 +167,65 @@ namespace MTCG_Project.Handler
                 reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error." };
             }
 
+            e.Reply(status, reply?.ToJsonString());
+            return true;
+        }
+
+        private static async Task<bool> _GetStackFromUser(HttpSvrEventArgs e)
+        {
+            JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request."};
+            int status = HttpStatusCodes.BAD_REQUEST;
+            
+            try
+            {
+
+                // todo authenticate
+                
+                JsonNode? json = JsonNode.Parse(e.Payload);
+
+                if (json != null)
+                {
+                    string username_from_json = (string?)json["username"];
+                    Stack stack = await Stack.GetStack(username_from_json);
+                    
+                    JsonObject? stackObject = new JsonObject();
+
+                    int i = 0;
+                    foreach (var card in stack.cards)
+                    {
+                        JsonObject? stackCard = new JsonObject();
+                        stackCard.Add("card_type", card is Monster_Card ? "Monstercard" : "Spellcard");
+                        stackCard.Add("card_name", card.Name);
+                        stackCard.Add("damage", card.Damage);
+                        stackCard.Add("element", card.Element.ToString());
+                        if (card is Monster_Card monster_card)
+                        {
+                            stackCard.Add("monster", monster_card.Monster.ToString());
+                        }
+                        stackObject.Add($"card_{i++}", stackCard);
+                    }
+                    
+                    JsonObject? stackResponse = new JsonObject()
+                    {
+                        ["username"] = username_from_json,
+                        ["stack"] = stackObject
+                    };
+                    reply.Add("stackResponse", stackResponse);
+                }
+
+                status = HttpStatusCodes.OK;
+                reply["success"] = true;
+                reply["message"] = "Query of user's stack success.";
+            }
+            catch (UserException ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message };
+            }
+            catch (Exception ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error."};
+            }
+            
             e.Reply(status, reply?.ToJsonString());
             return true;
         }

@@ -39,6 +39,7 @@ namespace MTCG_Project.Network
         public static async Task<(bool Success, User? User)> Authenticate_Token(string token)
         {
             {
+                // check if user is admin?
                 return (await SessionRepository.HasSession(token), await User.Get(token));
             }
         }

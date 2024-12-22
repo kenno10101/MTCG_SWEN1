@@ -21,7 +21,7 @@ namespace MTCG_Project.Misc
             Ork,
             Knight,
             Kraken,
-            FireElf
+            Elf
         }
         public enum Element
         {
