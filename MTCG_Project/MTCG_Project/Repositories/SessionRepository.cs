@@ -11,28 +11,17 @@ using System.Threading.Tasks;
 
 namespace MTCG_Project.Repositories
 {
-    public class TokenRepository
+    public class SessionRepository
     {
         public static async Task Add (string rval, User user)
         {
-            /*
-             CREATE TABLE sessions (
-                id SERIAL PRIMARY KEY,
-                token VARCHAR(255) NOT NULL UNIQUE, -- Session token
-                user_id INT NOT NULL UNIQUE,               -- Foreign key to users table
-                created_at TIMESTAMP DEFAULT NOW(), -- Timestamp for creation
-                expires_at TIMESTAMP,               -- Optional expiry time
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-            );
-
-             */
             try
             {
                 await using var conn = await DB_connection.connectDB();
 
                 await using (var cmd = new NpgsqlCommand(
-                    "INSERT INTO \"sessions\" (rval, user_id)" +
-                    "VALUES (@r, SELECT id FROM user WHERE username = @u LIMIT 1)" +
+                    "INSERT INTO \"sessions\" (token, user_id)" +
+                    "VALUES (@r, (SELECT users.id FROM users WHERE username = @u LIMIT 1))" +
                     "ON CONFLICT (user_id) DO UPDATE SET token = EXCLUDED.token"
                     , conn))
                 {
@@ -49,11 +38,12 @@ namespace MTCG_Project.Repositories
 
         public static async Task<bool> HasSession (string username)
         {
-            await using var conn = await DB_connection.connectDB();
             try
             {
                 int rows = 0;
-                await using var cmd = new NpgsqlCommand("SELECT * FROM INTO \"sessions\" WHERE user_id = (SELECT id FROM user WHERE username = @u LIMIT 1) LIMIT 1", conn);
+                
+                await using var conn = await DB_connection.connectDB();
+                await using var cmd = new NpgsqlCommand("SELECT * FROM \"sessions\" WHERE user_id = (SELECT id FROM users WHERE username = @u LIMIT 1) LIMIT 1", conn);
                 cmd.Parameters.AddWithValue("u", username);
                 
                 await using (var reader = await cmd.ExecuteReaderAsync())

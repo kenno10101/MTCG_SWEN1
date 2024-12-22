@@ -8,11 +8,11 @@ namespace MTCG_Project.Repositories;
 
 public class UserRepository
 {
-    public static async Task Create (User user)
+    public static async Task Create(User user)
     {
-        await using var conn = await DB_connection.connectDB();
         try
         {
+            await using var conn = await DB_connection.connectDB();
             await using (var cmd = new NpgsqlCommand(
                              "INSERT INTO \"users\" (username, password, fullname, email) VALUES (@u, @pw, @f, @em)",
                              conn))
@@ -28,26 +28,27 @@ public class UserRepository
         {
             if (ex.Message.Contains("username", StringComparison.OrdinalIgnoreCase))
             {
-                throw new UserException("A user with this username already exists.");    
+                throw new UserException("A user with this username already exists.");
             }
             else if (ex.Message.Contains("email", StringComparison.OrdinalIgnoreCase))
             {
-                throw new UserException("A user with this email already exists.");    
+                throw new UserException("A user with this email already exists.");
             }
             else
             {
                 throw new UserException("An error with the DB has occurred.");
             }
-            
         }
     }
-    
-    public static async Task<User> Get (string username)
+
+    public static async Task<User> Get(string username)
     {
-        await using var conn = await DB_connection.connectDB();
+        
         try
         {
             string user_name = null, password = null, fullname = null, email = null;
+            
+            await using var conn = await DB_connection.connectDB();
             await using var cmd = new NpgsqlCommand("SELECT * FROM \"users\" WHERE \"username\" = @u", conn);
             cmd.Parameters.AddWithValue("u", username);
             await using (var reader = await cmd.ExecuteReaderAsync())
@@ -65,7 +66,7 @@ public class UserRepository
             {
                 throw new UserException("User not found or incomplete data.");
             }
-            
+
             return new User(user_name, password, fullname, email);
         }
         catch (PostgresException ex)
@@ -77,17 +78,18 @@ public class UserRepository
             throw new UserException(ex.Message);
         }
     }
-    
-    public static async Task Update (User user, string old_username)
+
+    public static async Task Update(User user, string old_username)
     {
-        await using var conn = await DB_connection.connectDB();
         try
         {
             bool usernameChange = old_username != user.UserName;
+            
+            await using var conn = await DB_connection.connectDB();
             string queryString = usernameChange
                 ? "UPDATE \"users\" SET username = @u, password = @pw, fullname = @f, email = @em WHERE username = @user"
                 : "UPDATE \"users\" SET password = @pw, fullname = @f, email = @em WHERE username = @user";
-            
+
             await using (var cmd = new NpgsqlCommand(
                              queryString,
                              conn))
@@ -101,6 +103,7 @@ public class UserRepository
                 {
                     cmd.Parameters.AddWithValue("u", user.UserName);
                 }
+
                 int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
                 if (rowsAffected == 0)
@@ -118,11 +121,11 @@ public class UserRepository
 
             if (ex.Message.Contains("username", StringComparison.OrdinalIgnoreCase))
             {
-                throw new UserException("Error updating, user with this username already exists.");    
+                throw new UserException("Error updating, user with this username already exists.");
             }
             else if (ex.Message.Contains("email", StringComparison.OrdinalIgnoreCase))
             {
-                throw new UserException("Error updating, user with this email already exists.");    
+                throw new UserException("Error updating, user with this email already exists.");
             }
         }
     }

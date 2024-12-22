@@ -26,7 +26,7 @@ namespace MTCG_Project.Network
                     rval += _ALPHABET[rnd.Next(0, 62)];
                 }
 
-                await TokenRepository.Add(rval, user);
+                await SessionRepository.Add(rval, user);
 
                     return rval;
             }
@@ -39,21 +39,12 @@ namespace MTCG_Project.Network
         public static async Task<(bool Success, User? User)> Authenticate_Token(string token)
         {
             {
-                string username = "";
-
-                if (Program.ALLOW_DEBUG_TOKEN && token.EndsWith("-debug"))
-                {
-                    username = token.Split('-')[0];
-                }
-
-                return (await TokenRepository.HasSession(username), await User.Get(username));
+                return (await SessionRepository.HasSession(token), await User.Get(token));
             }
         }
 
         public static async Task<(bool Success, User? User)> Authenticate_Request(HttpSvrEventArgs e)
         {
-
-            string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
 
             foreach (HttpHeader i in e.Headers)
             {
@@ -65,12 +56,18 @@ namespace MTCG_Project.Network
                 {
                     break;
                 }
+                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
                 string username_from_token = i.Value[7..].Trim();
+                
+                if (Program.ALLOW_DEBUG_TOKEN && username_from_token.EndsWith("-debug"))
+                {
+                    username_from_token = username_from_token.Split('-')[0];
+                }
                 if (username_from_path != username_from_token)
                 {
                     break;
                 }
-                return await Authenticate_Token(i.Value[7..].Trim());
+                return await Authenticate_Token(username_from_token);
             }
 
             return (false, null);

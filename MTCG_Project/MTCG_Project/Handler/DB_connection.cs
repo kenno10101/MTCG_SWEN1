@@ -13,7 +13,7 @@ namespace MTCG_Project.Handler
         {
             var connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project";
 
-            await using var conn = new NpgsqlConnection(connString);
+            var conn = new NpgsqlConnection(connString);
             await conn.OpenAsync();
             return conn;
         }

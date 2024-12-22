@@ -133,7 +133,7 @@ namespace MTCG_Project.Models.User
         {
             try
             {
-                User user = await User.Get(userName);
+                User user = await Get(userName);
                 if (user.Password != password)
                 {
                     return (false, string.Empty);
