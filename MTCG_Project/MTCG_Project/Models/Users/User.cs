@@ -44,6 +44,16 @@ namespace MTCG_Project.Models.Users
         {
             get; set;
         } = string.Empty;
+        
+        public int coins
+        {
+            get; set;
+        }
+        
+        public int elo
+        {
+            get; set;
+        }
 
         public readonly Deck _deck;
 

@@ -57,17 +57,18 @@ namespace MTCG_Project.Network
                 {
                     break;
                 }
-                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+
+                // string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
                 string username_from_token = i.Value[7..].Trim();
                 
                 if (Program.ALLOW_DEBUG_TOKEN && username_from_token.EndsWith("-debug"))
                 {
                     username_from_token = username_from_token.Split('-')[0];
                 }
-                if (username_from_path != username_from_token)
-                {
-                    break;
-                }
+                // if (username_from_path != username_from_token)
+                // {
+                //     break;
+                // }
                 return await Authenticate_Token(username_from_token);
             }
 

@@ -90,9 +90,11 @@ namespace MTCG_Project.Handler
             try
             {
 
+                string username_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+                
                 (bool Success, User? User) ses = await Token.Authenticate_Request(e);
 
-                if (!ses.Success)
+                if (!ses.Success || username_from_path != ses.User.UserName)
                 {
                     status = HttpStatusCodes.UNAUTHORIZED;
                     throw new Exception("Unauthorized");
@@ -136,7 +138,7 @@ namespace MTCG_Project.Handler
 
                 (bool Success, User? User) ses = await Token.Authenticate_Request(e);
 
-                if (!ses.Success)
+                if (!ses.Success || username_from_path != ses.User.UserName)
                 {
                     status = HttpStatusCodes.UNAUTHORIZED;
                     throw new Exception("Unauthorized");
@@ -179,39 +181,34 @@ namespace MTCG_Project.Handler
             try
             {
 
-                // todo authenticate
+                (bool Success, User? User) ses = await Token.Authenticate_Request(e);
                 
-                JsonNode? json = JsonNode.Parse(e.Payload);
+                Stack stack = await Stack.GetStack(ses.User.UserName);
+                
+                JsonObject? stackObject = new JsonObject();
 
-                if (json != null)
+                int i = 0;
+                foreach (var card in stack.cards)
                 {
-                    string username_from_json = (string?)json["username"];
-                    Stack stack = await Stack.GetStack(username_from_json);
-                    
-                    JsonObject? stackObject = new JsonObject();
-
-                    int i = 0;
-                    foreach (var card in stack.cards)
+                    JsonObject? stackCard = new JsonObject();
+                    stackCard.Add("card_type", card is Monster_Card ? "Monstercard" : "Spellcard");
+                    stackCard.Add("card_name", card.Name);
+                    stackCard.Add("damage", card.Damage);
+                    stackCard.Add("element", card.Element.ToString());
+                    if (card is Monster_Card monster_card)
                     {
-                        JsonObject? stackCard = new JsonObject();
-                        stackCard.Add("card_type", card is Monster_Card ? "Monstercard" : "Spellcard");
-                        stackCard.Add("card_name", card.Name);
-                        stackCard.Add("damage", card.Damage);
-                        stackCard.Add("element", card.Element.ToString());
-                        if (card is Monster_Card monster_card)
-                        {
-                            stackCard.Add("monster", monster_card.Monster.ToString());
-                        }
-                        stackObject.Add($"card_{i++}", stackCard);
+                        stackCard.Add("monster", monster_card.Monster.ToString());
                     }
-                    
-                    JsonObject? stackResponse = new JsonObject()
-                    {
-                        ["username"] = username_from_json,
-                        ["stack"] = stackObject
-                    };
-                    reply.Add("stackResponse", stackResponse);
+                    stackObject.Add($"card_{i++}", stackCard);
                 }
+                
+                JsonObject? stackResponse = new JsonObject()
+                {
+                    ["username"] = ses.User.UserName,
+                    ["stack"] = stackObject
+                };
+                reply.Add("stackResponse", stackResponse);
+                
 
                 status = HttpStatusCodes.OK;
                 reply["success"] = true;
