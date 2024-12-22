@@ -13,7 +13,5 @@ namespace MTCG_Project.Interfaces
         string Name { get; }
         int Damage { get; }
         Element Element { get; }
-
-        Monster? GetMonsterType();
     }
 }

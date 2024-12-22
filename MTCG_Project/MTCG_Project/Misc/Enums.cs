@@ -8,6 +8,11 @@ namespace MTCG_Project.Misc
 {
     public class Enums
     {
+        public enum Cardtype
+        {
+            Spell,
+            Monster
+        }
         public enum Monster
         {
             Goblin,

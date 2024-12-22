@@ -13,7 +13,7 @@ namespace MTCG_Project.Models.Card
         public string Name { get; private set; }
         public int Damage { get; private set; }
         public Element Element { get; private set; }
-        public Monster Monster { get; set; }
+        public Monster Monster { get; private set; }
 
         public Monster_Card(string name, int damage, Element element, Monster monster)
         {

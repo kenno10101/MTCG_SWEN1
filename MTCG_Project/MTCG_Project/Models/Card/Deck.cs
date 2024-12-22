@@ -7,7 +7,7 @@ using MTCG_Project.Interfaces;
 
 namespace MTCG_Project.Models.Card
 {
-    internal class Deck
+    public class Deck
     {
         public List<ICard> _cards { get; private set; }
     }
