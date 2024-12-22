@@ -15,7 +15,7 @@ using MTCG_Project.Repositories;
 using Npgsql;
 using MTCG_Project.Handler;
 
-namespace MTCG_Project.Models.User
+namespace MTCG_Project.Models.Users
 {
     public sealed class User
     {
@@ -45,7 +45,7 @@ namespace MTCG_Project.Models.User
             get; set;
         } = string.Empty;
 
-        private readonly Deck _deck;
+        public readonly Deck _deck;
 
         public readonly Stack _stack;
 

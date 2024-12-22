@@ -1,7 +1,7 @@
 using MTCG_Project.Exceptions;
 using MTCG_Project.Handler;
 using MTCG_Project.Interfaces;
-using MTCG_Project.Models.User;
+using MTCG_Project.Models.Users;
 using Npgsql;
 
 namespace MTCG_Project.Repositories;
@@ -64,7 +64,7 @@ public class UserRepository
 
             if (user_name == null || password == null || fullname == null || email == null)
             {
-                throw new UserException("User not found or incomplete data.");
+                throw new UserException("Users not found or incomplete data.");
             }
 
             return new User(user_name, password, fullname, email);
@@ -116,7 +116,7 @@ public class UserRepository
         {
             if (ex.SqlState != "23505")
             {
-                throw new UserException("Error updating User in DB.");
+                throw new UserException("Error updating Users in DB.");
             }
 
             if (ex.Message.Contains("username", StringComparison.OrdinalIgnoreCase))

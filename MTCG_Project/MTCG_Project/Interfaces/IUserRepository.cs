@@ -1,4 +1,4 @@
-using MTCG_Project.Models.User;
+using MTCG_Project.Models.Users;
 
 namespace MTCG_Project.Interfaces;
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MTCG_Project.Models.User;
+using MTCG_Project.Models.Users;
 using MTCG_Project.Models.Card;
 using System.Net;
 using System.Text.Json.Nodes;
@@ -65,7 +65,7 @@ namespace MTCG_Project.Handler
                     reply = new JsonObject()
                     {
                         ["success"] = true,
-                        ["message"] = "User created."
+                        ["message"] = "Users created."
                     };
                 }
             }

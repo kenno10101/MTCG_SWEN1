@@ -1,4 +1,4 @@
-﻿using MTCG_Project.Models.User;
+﻿using MTCG_Project.Models.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;

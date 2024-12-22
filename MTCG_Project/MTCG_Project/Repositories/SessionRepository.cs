@@ -1,6 +1,6 @@
 ﻿using MTCG_Project.Exceptions;
 using MTCG_Project.Handler;
-using MTCG_Project.Models.User;
+using MTCG_Project.Models.Users;
 using Npgsql;
 using System;
 using System.Collections.Generic;

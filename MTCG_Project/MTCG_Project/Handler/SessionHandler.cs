@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using MTCG_Project.Interfaces;
-using MTCG_Project.Models.User;
+using MTCG_Project.Models.Users;
 using MTCG_Project.Exceptions;
 using System.Net;
 

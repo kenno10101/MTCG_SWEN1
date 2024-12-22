@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Misc;
 using MTCG_Project.Models.Card;
+using MTCG_Project.Models.Users;
 
 namespace MTCG_Project.Models.Battle
 {
@@ -30,8 +31,11 @@ namespace MTCG_Project.Models.Battle
             { 1, 1, 1, 1, 1, 1, 1 } // fireelf
         };
 
-        public static void Fight(Deck deck_1, Deck deck_2)
+        public static void Fight(User user_1, User user_2)
         {
+            Deck deck_1 = user_1._deck;
+            Deck deck_2 = user_2._deck;
+            
             int points_1 = 0, points_2 = 0;
             bool player_1_winner = false, player_2_winner = false;
             
