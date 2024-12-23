@@ -48,7 +48,7 @@ public class PackageHandler : Handler, IHandler
                 throw new Exception("Unauthorized");
             }
 
-            if (ses.User.coins < 5)
+            if (ses.User.Coins < 5)
             {
                 status = 403;
                 throw new Exception("Not enough money for buying a card package");

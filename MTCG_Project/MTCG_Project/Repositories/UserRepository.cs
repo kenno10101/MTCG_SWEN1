@@ -47,6 +47,7 @@ public class UserRepository
         try
         {
             string user_name = null, password = null, fullname = null, email = null;
+            int coins = 0, elo = 0;
             
             await using var conn = await DB_connection.connectDB();
             await using var cmd = new NpgsqlCommand("SELECT * FROM \"users\" WHERE \"username\" = @u", conn);
@@ -59,6 +60,8 @@ public class UserRepository
                     password = reader.GetString(2);
                     fullname = reader.GetString(3);
                     email = reader.GetString(4);
+                    coins = reader.GetInt32(5);
+                    elo = reader.GetInt32(6);
                 }
             }
 
@@ -67,7 +70,7 @@ public class UserRepository
                 throw new UserException("Users not found or incomplete data.");
             }
 
-            return new User(user_name, password, fullname, email);
+            return new User(user_name, password, fullname, email, coins, elo, null, await CardRepository.GetStack(username));
         }
         catch (PostgresException ex)
         {
@@ -81,27 +84,53 @@ public class UserRepository
 
     public static async Task Update(User user, string old_username)
     {
+        bool usernameChange = user.UserName != null && old_username != user.UserName;
+        bool passwordChange = user.Password != null;
+        bool nameChange = user.FullName != null;
+        bool emailChange = user.EMail != null;
+
+        string usernameString = " username = @u";
+        string passwordString = " password = @pw";
+        string nameString = " fullname = @f";
+        string emailString = " email = @em";
+
+        string queryString = "UPDATE \"users\" SET";
+
+        queryString += usernameChange ? usernameString : "";
+        queryString += passwordChange ? passwordString : "";
+        queryString += nameChange ? nameString : "";
+        queryString += emailChange ? emailString : "";
+
+        queryString += " WHERE username = @user";
+
+        if (!usernameChange && !passwordChange && !nameChange && !emailChange)
+        {
+            throw new Exception("Error no parameters given.");
+        }
+
         try
         {
-            bool usernameChange = old_username != user.UserName;
-            
-            await using var conn = await DB_connection.connectDB();
-            string queryString = usernameChange
-                ? "UPDATE \"users\" SET username = @u, password = @pw, fullname = @f, email = @em WHERE username = @user"
-                : "UPDATE \"users\" SET password = @pw, fullname = @f, email = @em WHERE username = @user";
 
-            await using (var cmd = new NpgsqlCommand(
-                             queryString,
-                             conn))
+            await using var conn = await DB_connection.connectDB();
+            await using (var cmd = new NpgsqlCommand(queryString, conn))
             {
                 cmd.Parameters.AddWithValue("user", old_username);
-                cmd.Parameters.AddWithValue("pw", user.Password);
-                cmd.Parameters.AddWithValue("f", user.FullName);
-                cmd.Parameters.AddWithValue("em", user.EMail);
-
+                
                 if (usernameChange)
                 {
                     cmd.Parameters.AddWithValue("u", user.UserName);
+                }
+                if (passwordChange)
+                {
+                    cmd.Parameters.AddWithValue("pw", user.Password);
+                }
+                if (nameChange)
+                {
+                    cmd.Parameters.AddWithValue("f", user.FullName);
+                }
+                if (emailChange)
+                {
+                    cmd.Parameters.AddWithValue("em", user.EMail);
                 }
 
                 int rowsAffected = await cmd.ExecuteNonQueryAsync();

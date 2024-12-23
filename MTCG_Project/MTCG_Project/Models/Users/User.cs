@@ -45,12 +45,12 @@ namespace MTCG_Project.Models.Users
             get; set;
         } = string.Empty;
         
-        public int coins
+        public int Coins
         {
             get; set;
         }
         
-        public int elo
+        public int Elo
         {
             get; set;
         }
@@ -63,12 +63,16 @@ namespace MTCG_Project.Models.Users
         private User()
         { }
 
-        public User(string username, string password, string fullname, string email)
+        public User(string username, string password, string fullname, string email, int coins = 20, int elo = 500, Deck deck = null, Stack stack = null)
         {
             UserName = username;
             Password = password;
             FullName = fullname;
             EMail = email;
+            Coins = coins;
+            Elo = elo;
+            _deck = deck;
+            _stack = stack;
         }
 
         public async Task Save(string token)
@@ -110,8 +114,9 @@ namespace MTCG_Project.Models.Users
         public static async Task<User> Get(string userName)
         {
             try
-            {                            
-                return await UserRepository.Get(userName);
+            {
+                User user = await UserRepository.Get(userName);
+                return user;
             }
             catch (Exception ex)
             {

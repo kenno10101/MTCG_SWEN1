@@ -56,10 +56,10 @@ namespace MTCG_Project.Handler
                 {
                     // create user object
                     await User.Create(
-                        (string) json["username"]!,
-                        (string)json["password"]!,
-                        (string?) json["name"] ?? "Max Mustermann",
-                        (string?) json["email"] ?? "test@test.at");
+                        (string) json["username"],
+                        (string) json["password"],
+                        (string) json["name"],
+                        (string) json["email"]);
                     
                     status = HttpStatusCodes.OK;
                     reply = new JsonObject()
@@ -94,21 +94,25 @@ namespace MTCG_Project.Handler
                 
                 (bool Success, User? User) ses = await Token.Authenticate_Request(e);
 
-                if (!ses.Success || username_from_path != ses.User.UserName)
+                if (!ses.Success)
                 {
                     status = HttpStatusCodes.UNAUTHORIZED;
                     throw new Exception("Unauthorized");
                 }
                 
-                User? user = ses.User;
+                User? user = await User.Get(username_from_path);
 
-                status = HttpStatusCodes.OK;
+                
                 JsonObject? userResponse = new JsonObject(){
                     ["user_UserName"] = user.UserName,
                     ["user_Password"] = user.Password,
                     ["user_FullName"] = user.FullName,
-                    ["user_EMail"] = user.EMail
+                    ["user_EMail"] = user.EMail,
+                    ["user_coin"] = user.Coins,
+                    ["user_elo"] = user.Elo
                 };
+
+                status = HttpStatusCodes.OK;
                 reply.Add("user", userResponse);
                 reply["success"] = true;
                 reply["message"] = "Query success";
@@ -138,7 +142,7 @@ namespace MTCG_Project.Handler
 
                 (bool Success, User? User) ses = await Token.Authenticate_Request(e);
 
-                if (!ses.Success || username_from_path != ses.User.UserName)
+                if (!ses.Success)
                 {
                     status = HttpStatusCodes.UNAUTHORIZED;
                     throw new Exception("Unauthorized");
@@ -149,7 +153,7 @@ namespace MTCG_Project.Handler
                     // create user object
                     await User.Update(
                         username_from_path,
-                        (string?)json["username"] ?? username_from_path,
+                        (string?)json["username"],
                         (string?)json["password"],
                         (string?)json["name"],
                         (string?)json["email"]
