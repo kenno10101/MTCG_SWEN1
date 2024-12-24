@@ -104,6 +104,7 @@ namespace MTCG_Project.Models.Users
                 };
 
                 await UserRepository.Create(user);
+                await Deck.Create(user.UserName);
             }
             catch (Exception ex)
             {

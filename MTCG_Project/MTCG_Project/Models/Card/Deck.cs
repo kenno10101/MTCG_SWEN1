@@ -46,7 +46,7 @@ namespace MTCG_Project.Models.Card
             }
         }
 
-        public static async Task<Deck> GetDeck(string username)
+        public static async Task<Deck> Get(string username)
         {
             try
             {

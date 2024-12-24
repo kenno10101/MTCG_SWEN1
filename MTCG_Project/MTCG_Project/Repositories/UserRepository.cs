@@ -70,7 +70,7 @@ public class UserRepository
                 throw new UserException("Users not found or incomplete data.");
             }
 
-            return new User(user_name, password, fullname, email, coins, elo, null, await CardRepository.GetStack(username));
+            return new User(user_name, password, fullname, email, coins, elo, await CardRepository.GetDeck(username), await CardRepository.GetStack(username));
         }
         catch (PostgresException ex)
         {

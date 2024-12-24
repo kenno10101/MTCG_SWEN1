@@ -3,6 +3,7 @@ using MTCG_Project.Interfaces;
 using static MTCG_Project.Misc.Enums;
 using MTCG_Project.Models.Card;
 using Npgsql;
+using MTCG_Project.Exceptions;
 
 namespace MTCG_Project.Repositories;
 
@@ -62,6 +63,11 @@ public class CardRepository
     {
         try
         {
+            if (cards == null || cards.Length != num_cards_in_package)
+            {
+                throw new Exception($"Number of cards should be {num_cards_in_package}.");
+            }
+
             await using var conn = await DB_connection.connectDB();
             await using (var cmd = new NpgsqlCommand(
                              "INSERT INTO \"packages\" (card_1_name, card_2_name, card_3_name, card_4_name, card_5_name) VALUES (@c1, @c2, @c3, @c4, @c5)",
@@ -152,8 +158,10 @@ public class CardRepository
                 cmd.Parameters.AddWithValue("u", username);
                 for (int i = 0; i < num_cards_in_deck; i++)
                 {
-                    cmd.Parameters.AddWithValue("c" + (i + 1), cards[i]);
+                    cmd.Parameters.AddWithValue("c" + (i + 1), (cards != null && i < cards.Length && cards[i] != null) ? cards[i] : DBNull.Value);
                 }
+
+                await cmd.ExecuteNonQueryAsync();
             }
         }
         catch (Exception ex)
@@ -224,6 +232,13 @@ public class CardRepository
                 for (int i = 0; i < num_cards_in_deck; i++)
                 {
                     cmd.Parameters.AddWithValue("c" + (i + 1), cards[i]);
+                }
+
+                int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                if (rowsAffected == 0)
+                {
+                    throw new UserException("There was an error updating the user's deck");
                 }
             }
         }
