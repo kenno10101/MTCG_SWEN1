@@ -197,7 +197,7 @@ namespace MTCG_Project.Models.Battle
 
                 BattleLog += "Both Player's cards deal an equal amount of damage and the round results in a draw. A round winner will be chosen randomly.\n";
 
-                return cards[random_winner.Next(0, 1)];
+                return cards[random_winner.Next(0, cards.Count)];
             }
 
             BattleLog += $"Player 1's {card_1.Name} dealt {card_1_battle_damage} Damage to Player 2's {card_2.Name}\n";
