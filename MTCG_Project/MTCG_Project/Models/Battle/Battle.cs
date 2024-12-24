@@ -40,23 +40,23 @@ namespace MTCG_Project.Models.Battle
             bool player_1_winner = false, player_2_winner = false;
             
             Random rnd = new();
-            var card_1 = deck_1._cards[rnd.Next(0, deck_1._cards.Count)];
-            deck_1._cards.Remove(card_1);
-            var card_2 = deck_2._cards[rnd.Next(0, deck_2._cards.Count)];
-            deck_2._cards.Remove(card_2);
+            var card_1 = deck_1.cards[rnd.Next(0, deck_1.cards.Count)];
+            deck_1.cards.Remove(card_1);
+            var card_2 = deck_2.cards[rnd.Next(0, deck_2.cards.Count)];
+            deck_2.cards.Remove(card_2);
             
             for (int i = 0; i < 100; i++)
             {
                 // pick new random card of previous round's loser
                 if (player_1_winner)
                 {
-                    card_2 = deck_2._cards[rnd.Next(0, deck_2._cards.Count)];
-                    deck_2._cards.Remove(card_2);
+                    card_2 = deck_2.cards[rnd.Next(0, deck_2.cards.Count)];
+                    deck_2.cards.Remove(card_2);
                 }
                 else if (player_2_winner)
                 {
-                    card_1 = deck_1._cards[rnd.Next(0, deck_1._cards.Count)];
-                    deck_1._cards.Remove(card_1);
+                    card_1 = deck_1.cards[rnd.Next(0, deck_1.cards.Count)];
+                    deck_1.cards.Remove(card_1);
                 }
                 
                 // add point to round winner and add opponent's card to winner's deck
@@ -65,7 +65,7 @@ namespace MTCG_Project.Models.Battle
                     points_1++;
                     Console.WriteLine($"Player 1's {card_1.Name} won this round.");
                     
-                    deck_1._cards.Add(card_2);
+                    deck_1.cards.Add(card_2);
                     player_1_winner = true;
                 }
                 else
@@ -73,11 +73,11 @@ namespace MTCG_Project.Models.Battle
                     points_2++;
                     Console.WriteLine($"Player 2's {card_2.Name} won this round.");
                     
-                    deck_2._cards.Add(card_1);
+                    deck_2.cards.Add(card_1);
                     player_2_winner = true;
                 }
 
-                if (deck_1._cards.Count == 0 || deck_2._cards.Count == 0)
+                if (deck_1.cards.Count == 0 || deck_2.cards.Count == 0)
                 {
                     break;
                 }
