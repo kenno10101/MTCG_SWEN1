@@ -44,7 +44,7 @@ public class CardHandler : Handler, IHandler
         return false;
     }
 
-    public static async Task<bool> buyPackage(HttpSvrEventArgs e)
+    private static async Task<bool> buyPackage(HttpSvrEventArgs e)
     {
         JsonObject? reply = new JsonObject()
         {
@@ -82,7 +82,7 @@ public class CardHandler : Handler, IHandler
         return true;
     }
     
-    public static async Task<bool> createPackage(HttpSvrEventArgs e)
+    private static async Task<bool> createPackage(HttpSvrEventArgs e)
     {
         JsonObject? reply = new JsonObject()
         {

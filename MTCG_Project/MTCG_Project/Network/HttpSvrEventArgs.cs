@@ -75,7 +75,7 @@ namespace MTCG_Project.Network
             get; protected set;
         } = string.Empty;
 
-        public void Reply(int status, string? body = null)
+        public void Reply(int status, string? body = null, bool closeConnection = true)
         {
             string data;
 
@@ -97,13 +97,17 @@ namespace MTCG_Project.Network
             {
                 data += "Content-Length: 0\n";
             }
-            data += "Content-Type: text/plain\n\n";
+            data += "Content-Type: text/json\n\n";
             if (!string.IsNullOrEmpty(body)) { data += body; }
 
             byte[] buf = Encoding.ASCII.GetBytes(data);
             _Client.GetStream().Write(buf, 0, buf.Length);
-            _Client.Close();
-            _Client.Dispose();
+            if (closeConnection)
+            {
+                _Client.Close();
+                _Client.Dispose(); 
+            }
+
         }
     }
 }
