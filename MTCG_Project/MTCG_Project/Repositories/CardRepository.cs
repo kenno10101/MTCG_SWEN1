@@ -86,67 +86,56 @@ public class CardRepository
             throw new Exception(ex.Message);
         }
     }
-    
+
     public static async Task BuyPackage(string username)
     {
+        const string query = @"
+        WITH updated_user AS (
+            UPDATE ""users""
+            SET coins = coins - 5
+            WHERE username = @u
+            RETURNING id AS user_id
+        ),
+        random_package AS (
+            SELECT card_1_name, card_2_name, card_3_name, card_4_name, card_5_name
+            FROM ""packages""
+            ORDER BY RANDOM()
+            LIMIT 1
+        ),
+        card_ids AS (
+            SELECT 
+                (SELECT id FROM cards WHERE name = card_1_name) AS card_1_id,
+                (SELECT id FROM cards WHERE name = card_2_name) AS card_2_id,
+                (SELECT id FROM cards WHERE name = card_3_name) AS card_3_id,
+                (SELECT id FROM cards WHERE name = card_4_name) AS card_4_id,
+                (SELECT id FROM cards WHERE name = card_5_name) AS card_5_id
+            FROM random_package
+        )
+        INSERT INTO ""stack"" (user_id, card_id)
+        SELECT updated_user.user_id, card_id
+        FROM updated_user, card_ids, LATERAL (
+            VALUES 
+                (card_1_id), 
+                (card_2_id), 
+                (card_3_id), 
+                (card_4_id), 
+                (card_5_id)
+        ) AS card_list(card_id);";
+
         try
         {
-            
-            string[] cards = {};
-            
             await using var conn = await DB_connection.connectDB();
-            
-            // subtract 5 coins
-            await using (var cmd_1 = new NpgsqlCommand(
-                             "UPDATE \"users\" SET coins = coins - 5 WHERE username = @u",
-                             conn))
-            {
-                cmd_1.Parameters.AddWithValue("u", username);
-                
-                await cmd_1.ExecuteNonQueryAsync();
-            };
-            
-            // get cards from random package
-            await using var cmd = new NpgsqlCommand(
-                "SELECT card_1_name, card_2_name, card_3_name, card_4_name, card_5_name FROM \"packages\" ORDER BY RANDOM() LIMIT 1",
-                conn);
-            await using (var reader = await cmd.ExecuteReaderAsync())
-            {
-                while (await reader.ReadAsync())
-                {
-                    for(int i = 0; i <= num_cards_in_package; i++)
-                    {
-                        cards[i] = reader.GetString(i);
-                    }
-                }
-            }
-            
-            // add cards from package to user's stack
-            await using (var cmd_2 = new NpgsqlCommand(
-                             "INSERT INTO \"stack\" (user_id, card_id) " +
-                             "VALUES ((SELECT id FROM users WHERE username = @u), (SELECT id FROM cards WHERE name = @c1)), " +
-                             "((SELECT id FROM users WHERE username = @u), (SELECT id FROM cards WHERE name = @c2)), " +
-                             "((SELECT id FROM users WHERE username = @u), (SELECT id FROM cards WHERE name = @c3)), " +
-                             "((SELECT id FROM users WHERE username = @u), (SELECT id FROM cards WHERE name = @c4)), " +
-                             "((SELECT id FROM users WHERE username = @u), (SELECT id FROM cards WHERE name = @c5))",
-                             conn))
-            {
-                cmd_2.Parameters.AddWithValue("u", username);
+            await using var cmd = new NpgsqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("u", username);
 
-                for(int i = 0; i <= num_cards_in_package; i++)
-                {
-                    cmd_2.Parameters.AddWithValue("c"+i, cards[i]);
-                }
-
-                await cmd_2.ExecuteNonQueryAsync();
-            }
-            
+            await cmd.ExecuteNonQueryAsync();
         }
         catch (Exception ex)
         {
             throw new Exception(ex.Message);
         }
     }
+
 
     public static async Task CreateDeck(string username, string[] cards)
     {
