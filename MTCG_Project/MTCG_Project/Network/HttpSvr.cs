@@ -49,19 +49,22 @@ namespace MTCG_Project.Network
             // Pairing logic
             if (data.Contains("battle")) // Assuming client sends a "battle" request
             {
-                waitingClients.Enqueue(client);
-                temp_data.Add(data);
+                if (!waitingClients.Contains(client)) // Avoid duplicate enqueue
+                {
+                    waitingClients.Enqueue(client);
+                    temp_data.Add(data);
+                }
                 if (waitingClients.Count >= 2)
                 {
                     // Pair two clients
                     if (waitingClients.TryDequeue(out var client1) && waitingClients.TryDequeue(out var client2))
                     {
                         HttpSvrEventArgs e1 = new HttpSvrEventArgs(client1, temp_data[0]);
-                        HttpSvrEventArgs e2 = new HttpSvrEventArgs(client1, temp_data[1]);
+                        HttpSvrEventArgs e2 = new HttpSvrEventArgs(client2, temp_data[1]);
+                        
+                        temp_data.RemoveRange(0, 2); 
                         
                         await BattleHandler.joinBattle(e1, e2);
-
-                        temp_data = new List<string>();
                     }
                 }
                 else

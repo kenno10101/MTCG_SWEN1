@@ -44,11 +44,9 @@ namespace MTCG_Project.Models.Battle
 
             Random rnd = new();
             var card_1 = deck_1.cards[rnd.Next(0, deck_1.cards.Count)];
-            deck_1.cards.Remove(card_1);
             BattleLog += $"Player 1 selected card \"{card_1.Name}\" for this round.\n";
             
             var card_2 = deck_2.cards[rnd.Next(0, deck_2.cards.Count)];
-            deck_2.cards.Remove(card_2);
             BattleLog += $"Player 2 selected card \"{card_2.Name}\" for this round.\n";
 
             int num_rounds = 0;
@@ -59,22 +57,26 @@ namespace MTCG_Project.Models.Battle
                 if (player_1_winner)
                 {
                     card_2 = deck_2.cards[rnd.Next(0, deck_2.cards.Count)];
-                    deck_2.cards.Remove(card_2);
-                    BattleLog += $"Player 1 selected card \"{card_1.Name}\" for this round.\n";
+                    BattleLog += $"Player 2 selected card \"{card_2.Name}\" for this round.\n";
+                    
+                    player_1_winner = false;
                 }
                 else if (player_2_winner)
                 {
                     card_1 = deck_1.cards[rnd.Next(0, deck_1.cards.Count)];
-                    deck_1.cards.Remove(card_1);
-                    BattleLog += $"Player 2 selected card \"{card_2.Name}\" for this round.\n";
+                    BattleLog += $"Player 1 selected card \"{card_1.Name}\" for this round.\n";
+                    
+                    player_2_winner = false;
                 }
+
 
                 // add point to round winner and add opponent's card to winner's deck
                 if (CardsFight(card_1, card_2) == card_1)
                 {
                     points_1++;
                     BattleLog += $"Player 1's {card_1.Name} won this round.\n";
-
+                    
+                    deck_2.cards.Remove(card_2);
                     deck_1.cards.Add(card_2);
                     player_1_winner = true;
                 }
@@ -83,10 +85,12 @@ namespace MTCG_Project.Models.Battle
                     points_2++;
                     BattleLog += $"Player 2's {card_2.Name} won this round.\n";
 
+                    deck_1.cards.Remove(card_1);
                     deck_2.cards.Add(card_1);
                     player_2_winner = true;
                 }
 
+                BattleLog += "=== END OF ROUND ===\n";
                 if (deck_1.cards.Count == 0 || deck_2.cards.Count == 0)
                 {
                     BattleLog += "The Battle has finished.\n";
@@ -190,6 +194,8 @@ namespace MTCG_Project.Models.Battle
             {
                 Random random_winner = new();
                 List<ICard> cards = new List<ICard> { card_1, card_2 };
+
+                BattleLog += "Both Player's cards deal an equal amount of damage and the round results in a draw. A round winner will be chosen randomly.\n";
 
                 return cards[random_winner.Next(0, 1)];
             }

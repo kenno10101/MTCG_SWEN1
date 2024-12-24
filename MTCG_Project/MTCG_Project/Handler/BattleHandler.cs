@@ -17,7 +17,7 @@ public class BattleHandler : Handler, IHandler
         return false;
     }
     
-    public static async Task<bool> joinBattle(HttpSvrEventArgs e1, HttpSvrEventArgs e2)
+    public static async Task joinBattle(HttpSvrEventArgs e1, HttpSvrEventArgs e2)
     {
         
         JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
@@ -50,10 +50,10 @@ public class BattleHandler : Handler, IHandler
         {
             reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Error handling request." };
         }
-
+        
         e1.Reply(status, reply?.ToJsonString());
         e2.Reply(status, reply?.ToJsonString());
-        return true;
+
     }
     
 }
