@@ -47,7 +47,7 @@ public class UserRepository
         try
         {
             string user_name = null, password = null, fullname = null, email = null;
-            int coins = 0, elo = 0;
+            int coins = 0;
             
             await using var conn = await DB_connection.connectDB();
             await using var cmd = new NpgsqlCommand("SELECT * FROM \"users\" WHERE \"username\" = @u", conn);
@@ -61,7 +61,6 @@ public class UserRepository
                     fullname = reader.GetString(3);
                     email = reader.GetString(4);
                     coins = reader.GetInt32(5);
-                    elo = reader.GetInt32(6);
                 }
             }
 
@@ -70,7 +69,7 @@ public class UserRepository
                 throw new UserException("Users not found or incomplete data.");
             }
 
-            return new User(user_name, password, fullname, email, coins, elo, await CardRepository.GetDeck(username), await CardRepository.GetStack(username));
+            return new User(user_name, password, fullname, email, coins, await CardRepository.GetDeck(username), await CardRepository.GetStack(username), await GetStats(username));
         }
         catch (PostgresException ex)
         {
@@ -156,6 +155,63 @@ public class UserRepository
             {
                 throw new UserException("Error updating, user with this email already exists.");
             }
+        }
+    }
+    
+    public static async Task CreateStats(string username)
+    {
+        try
+        {
+            await using var conn = await DB_connection.connectDB();
+            await using (var cmd = new NpgsqlCommand(
+                             "INSERT INTO \"stats\" (username, battles_played, wins, losses, draws, elo) VALUES (@u, @b, @w, @l, @d, @e)", conn))
+            {
+                cmd.Parameters.AddWithValue("u", username);
+                cmd.Parameters.AddWithValue("b", 0);
+                cmd.Parameters.AddWithValue("w", 0);
+                cmd.Parameters.AddWithValue("l", 0);
+                cmd.Parameters.AddWithValue("d", 0);
+                cmd.Parameters.AddWithValue("e", 100);
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
+    
+    public static async Task<Stats> GetStats(string username)
+    {
+        try
+        {
+            
+            await using var conn = await DB_connection.connectDB();
+            await using var cmd = new NpgsqlCommand(
+                "SELECT battles_played, wins, losses, draws, elo FROM \"stats\" WHERE username = @u",
+                conn);
+            cmd.Parameters.AddWithValue("u", username);
+
+            string user = null;
+            int battles_played = 0, wins = 0, losses = 0, draws = 0, elo = 0;
+            await using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    battles_played = reader.GetInt32(0);
+                    wins = reader.GetInt32(1);
+                    losses = reader.GetInt32(2);
+                    draws = reader.GetInt32(3);
+                    elo = reader.GetInt32(4);
+                }
+            }
+            
+            return new Stats(battles_played, wins, losses, draws, elo);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
         }
     }
 }

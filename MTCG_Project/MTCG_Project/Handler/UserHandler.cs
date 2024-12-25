@@ -22,6 +22,7 @@ namespace MTCG_Project.Handler
             bool is_CreateUserRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST");
             bool is_QueryUserRequest = e.Path.StartsWith("/users/") && (e.Method == "GET");
             bool is_UpdateUserRequest = e.Path.StartsWith("/users/") && (e.Method == "PUT");
+            bool is_GetUserStatsRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/stats") && (e.Method == "GET");
             
 
             if (is_CreateUserRequest)
@@ -35,6 +36,10 @@ namespace MTCG_Project.Handler
             else if (is_UpdateUserRequest)
             {
                 return _UpdateUser(e).GetAwaiter().GetResult();
+            }
+            else if (is_GetUserStatsRequest)
+            {
+                return _GetUserStats(e).GetAwaiter().GetResult();
             }
             
 
@@ -105,8 +110,7 @@ namespace MTCG_Project.Handler
                     ["user_Password"] = user.Password,
                     ["user_FullName"] = user.FullName,
                     ["user_EMail"] = user.EMail,
-                    ["user_coin"] = user.Coins,
-                    ["user_elo"] = user.Elo
+                    ["user_coin"] = user.Coins
                 };
 
                 status = HttpStatusCodes.OK;
@@ -168,6 +172,55 @@ namespace MTCG_Project.Handler
             catch (Exception ex)
             {
                 reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error." };
+            }
+
+            e.Reply(status, reply?.ToJsonString());
+            return true;
+        }
+
+        private static async Task<bool> _GetUserStats(HttpSvrEventArgs e)
+        {
+            JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request."};
+            int status = HttpStatusCodes.BAD_REQUEST;
+
+            try
+            {
+                
+                (bool Success, User? User) ses = await Token.Authenticate_Request(e);
+
+                if (!ses.Success)
+                {
+                    status = HttpStatusCodes.UNAUTHORIZED;
+                    throw new Exception("Unauthorized");
+                }
+
+                Stats stats = await Stats.Get(ses.User.UserName);
+                
+                JsonObject? statsObject = new JsonObject(){
+                    ["battles_played"] = stats.Battles_played,
+                    ["wins"] = stats.Wins,
+                    ["losses"] = stats.Losses,
+                    ["draws"] = stats.Draws,
+                    ["elo"] = stats.Elo
+                };
+                
+                JsonObject? statsResponse = new JsonObject(){
+                    ["username"] = ses.User.UserName,
+                    ["stats"] = statsObject
+                };
+
+                status = HttpStatusCodes.OK;
+                reply.Add("statsResponse", statsResponse);
+                reply["success"] = true;
+                reply["message"] = "Query success";
+            }
+            catch (UserException ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message };
+            }
+            catch (Exception ex)
+            {
+                reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Unexpected error."};
             }
 
             e.Reply(status, reply?.ToJsonString());

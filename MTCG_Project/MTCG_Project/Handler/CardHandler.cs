@@ -199,24 +199,24 @@ public class CardHandler : Handler, IHandler
             int i = 0;
             foreach (var card in deck.cards)
             {
-                JsonObject? stackCard = new JsonObject();
-                stackCard.Add("card_type", card is Monster_Card ? "Monstercard" : "Spellcard");
-                stackCard.Add("card_name", card.Name);
-                stackCard.Add("damage", card.Damage);
-                stackCard.Add("element", card.Element.ToString());
+                JsonObject? deckCard = new JsonObject();
+                deckCard.Add("card_type", card is Monster_Card ? "Monstercard" : "Spellcard");
+                deckCard.Add("card_name", card.Name);
+                deckCard.Add("damage", card.Damage);
+                deckCard.Add("element", card.Element.ToString());
                 if (card is Monster_Card monster_card)
                 {
-                    stackCard.Add("monster", monster_card.Monster.ToString());
+                    deckCard.Add("monster", monster_card.Monster.ToString());
                 }
-                stackObject.Add($"card_{i++}", stackCard);
+                stackObject.Add($"card_{i++}", deckCard);
             }
 
-            JsonObject? stackResponse = new JsonObject()
+            JsonObject? deckResponse = new JsonObject()
             {
                 ["username"] = ses.User.UserName,
-                ["stack"] = stackObject
+                ["deck"] = stackObject
             };
-            reply.Add("stackResponse", stackResponse);
+            reply.Add("deckResponse", deckResponse);
 
 
             status = HttpStatusCodes.OK;
