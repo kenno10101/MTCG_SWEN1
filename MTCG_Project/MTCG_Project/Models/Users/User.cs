@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MTCG_Project.Exceptions;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Models.Card;
+using MTCG_Project.Models.Stats;
 using MTCG_Project.Network;
 using MTCG_Project.Repositories;
 using Npgsql;
@@ -54,12 +55,12 @@ namespace MTCG_Project.Models.Users
 
         public readonly Stack _stack;
 
-        public readonly Stats _stats;
+        public readonly Stat _stats;
 
         private User()
         { }
 
-        public User(string username, string password, string fullname, string email, int coins = 20, Deck deck = null, Stack stack = null, Stats stats = null)
+        public User(string username, string password, string fullname, string email, int coins = 20, Deck deck = null, Stack stack = null, Stat stats = null)
         {
             UserName = username;
             Password = password;
@@ -101,7 +102,7 @@ namespace MTCG_Project.Models.Users
 
                 await UserRepository.Create(user);
                 await Deck.Create(user.UserName);
-                await Stats.Create(user.UserName);
+                await Stat.Create(user.UserName);
             }
             catch (Exception ex)
             {

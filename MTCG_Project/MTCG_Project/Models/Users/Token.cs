@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MTCG_Project.Network;
 using MTCG_Project.Repositories;
 
-namespace MTCG_Project.Network
+namespace MTCG_Project.Models.Users
 {
     public static class Token
     {

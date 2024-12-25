@@ -3,18 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using MTCG_Project.Handler;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Misc;
 using MTCG_Project.Models.Card;
 using MTCG_Project.Models.Users;
+using MTCG_Project.Models.Stats;
+using MTCG_Project.Network;
+
 
 namespace MTCG_Project.Models.Battle
 {
     public class Battle
     {
-        private static string BattleLog = string.Empty;
+        public string BattleLog = string.Empty;
 
         private static readonly double[,] Effectiveness_Matrix_Spell =
         {
@@ -23,6 +27,7 @@ namespace MTCG_Project.Models.Battle
             { 2, 0.5, 1 }  // normal
         };
 
+        
         private static readonly double[,] Effectiveness_Matrix_Monster =
         {
             { 1, 0, 1, 1, 1, 1, 1 }, // goblin
@@ -34,7 +39,7 @@ namespace MTCG_Project.Models.Battle
             { 1, 1, 1, 1, 1, 1, 1 }  // fireelf
         };
 
-        public static void Fight(User user_1, User user_2)
+        public async Task Fight(User user_1, User user_2)
         {
             Deck deck_1 = user_1._deck;
             Deck deck_2 = user_2._deck;
@@ -74,7 +79,7 @@ namespace MTCG_Project.Models.Battle
                 if (CardsFight(card_1, card_2) == card_1)
                 {
                     points_1++;
-                    BattleLog += $"Player 1's {card_1.Name} won this round.\n";
+                    BattleLog += $"Player 1's \"{card_1.Name}\" won this round.\n";
                     
                     deck_2.cards.Remove(card_2);
                     deck_1.cards.Add(card_2);
@@ -83,7 +88,7 @@ namespace MTCG_Project.Models.Battle
                 else
                 {
                     points_2++;
-                    BattleLog += $"Player 2's {card_2.Name} won this round.\n";
+                    BattleLog += $"Player 2's \"{card_2.Name}\" won this round.\n";
 
                     deck_1.cards.Remove(card_1);
                     deck_2.cards.Add(card_1);
@@ -100,28 +105,26 @@ namespace MTCG_Project.Models.Battle
 
             if (points_1 == points_2)
             {
+                await Stat.Update(user_1.UserName, user_2.UserName, "draw");
                 BattleLog += "The battle has ended in a draw.\n";
             }
             else if (points_1 > points_2)
             {
+                await Stat.Update(user_1.UserName, user_2.UserName, "win");
                 BattleLog += "Player 1 won the battle.\n";
             }
             else
             {
+                await Stat.Update(user_1.UserName, user_2.UserName, "loss");
                 BattleLog += "Player 2 won the battle.\n";
             }
             BattleLog += $"Player 1 Points: {points_1}\n";
             BattleLog += $"Player 2 Points: {points_2}\n";
             BattleLog += $"Number of Rounds: {num_rounds}\n";
 
-            /*
-             todo
-             elo calculation
-             update stats, scoreboard
-             */
         }
 
-        private static ICard CardsFight(ICard card_1, ICard card_2)
+        private ICard CardsFight(ICard card_1, ICard card_2)
         {
             double card_1_battle_damage = 0;
             double card_2_battle_damage = 0;
@@ -189,32 +192,96 @@ namespace MTCG_Project.Models.Battle
                                        Effectiveness_Matrix_Spell[(int)monster_card_2.Element, (int)card_1.Element];
             }
 
+            BattleLog += $"Player 1's \"{card_1.Name}\" dealt {card_1_battle_damage} Damage to Player 2's \"{card_2.Name}\"\n";
+            BattleLog += $"Player 2's \"{card_2.Name}\" dealt {card_2_battle_damage} Damage to Player 1's \"{card_1.Name}\"\n";
+            
             // choose random in case of draw
             if (card_1_battle_damage == card_2_battle_damage)
             {
                 Random random_winner = new();
                 List<ICard> cards = new List<ICard> { card_1, card_2 };
 
-                BattleLog += "Both Player's cards deal an equal amount of damage and the round results in a draw. A round winner will be chosen randomly.\n";
+                BattleLog += "Both Player's cards deal an equal amount of damage and the round resulted in a draw. A round winner will be chosen randomly.\n";
 
                 return cards[random_winner.Next(0, cards.Count)];
             }
 
-            BattleLog += $"Player 1's {card_1.Name} dealt {card_1_battle_damage} Damage to Player 2's {card_2.Name}\n";
-            BattleLog += $"Player 2's {card_2.Name} dealt {card_2_battle_damage} Damage to Player 1's {card_1.Name}\n";
-
             return card_1_battle_damage > card_2_battle_damage ? card_1 : card_2;
         }
 
-        public static async Task<string> JoinBattle(string username_1, string username_2)
+        public async Task<JsonObject> JoinBattle(string username_1, string username_2)
         {
             User user_1 = await User.Get(username_1);
             User user_2 = await User.Get(username_2);
-            BattleLog = string.Empty;
+            this.BattleLog = string.Empty;
 
-            Fight(user_1, user_2);
-
-            return BattleLog;
+            await this.Fight(user_1, user_2);
+            return BattleLogParser(this.BattleLog);
         }
+        
+        private static JsonObject BattleLogParser(string battleLog)
+    {
+        var rounds = new JsonArray();
+        var lines = battleLog.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var currentRound = new JsonObject();
+        var roundActions = new JsonArray();
+        
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("Player 1 selected card") || line.StartsWith("Player 2 selected card"))
+            {
+                roundActions.Add(line);
+            }
+            else if (line.Contains("dealt"))
+            {
+                roundActions.Add(line);
+            }
+            else if (line.Contains("draw"))
+            {
+                roundActions.Add(line);
+            }
+            else if (line.Contains("won this round"))
+            {
+                currentRound["round"] = rounds.Count + 1;
+                currentRound["actions"] = roundActions;
+                currentRound["winner"] = line.Replace(" won this round.", "").Trim();
+            }
+            else if (line == "=== END OF ROUND ===")
+            {
+                if (currentRound.Count > 0)
+                {
+                    rounds.Add(currentRound);
+                    currentRound = new JsonObject();
+                    roundActions = new JsonArray();
+                }
+            }
+            else if (line.StartsWith("The Battle has finished"))
+            {
+                break; // End of the parsing for rounds
+            }
+        }
+
+        var summary = new JsonObject
+        {
+            ["player1Points"] = ExtractValueFromLine(lines[^3], "Player 1 Points: "),
+            ["player2Points"] = ExtractValueFromLine(lines[^2], "Player 2 Points: "),
+            ["numberOfRounds"] = ExtractValueFromLine(lines[^1], "Number of Rounds: ")
+        };
+
+        return new JsonObject
+        {
+            ["rounds"] = rounds,
+            ["summary"] = summary
+        };
+    }
+
+    private static int ExtractValueFromLine(string line, string prefix)
+    {
+        if (line.StartsWith(prefix))
+        {
+            return int.Parse(line.Replace(prefix, "").Trim());
+        }
+        return 0;
+    }
     }
 }

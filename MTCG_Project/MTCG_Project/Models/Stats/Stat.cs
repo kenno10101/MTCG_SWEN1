@@ -1,8 +1,8 @@
 using MTCG_Project.Repositories;
 
-namespace MTCG_Project.Models.Users;
+namespace MTCG_Project.Models.Stats;
 
-public class Stats
+public class Stat
 {
     public readonly int Battles_played = 0;
     public readonly int Wins = 0;
@@ -10,7 +10,7 @@ public class Stats
     public readonly int Draws = 0;
     public readonly int Elo = 100;
 
-    public Stats(int battles_played, int wins, int losses, int draws, int elo)
+    public Stat(int battles_played, int wins, int losses, int draws, int elo)
     {
         Battles_played = battles_played;
         Wins = wins;
@@ -31,11 +31,23 @@ public class Stats
         }
     }
     
-    public static async Task<Stats> Get(string username)
+    public static async Task<Stat> Get(string username)
     {
         try
         {
             return await UserRepository.GetStats(username);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
+
+    public static async Task Update(string username1, string username2, string result)
+    {
+        try
+        {   
+            await UserRepository.UpdateStats(username1, username2, result);
         }
         catch (Exception e)
         {

@@ -34,14 +34,15 @@ public class BattleHandler : Handler, IHandler
                 status = HttpStatusCodes.UNAUTHORIZED;
                 throw new Exception("Unauthorized");
             }
-            
-            string battleLog = await Battle.JoinBattle(ses1.User.UserName, ses2.User.UserName);
+
+            Battle battle = new Battle();
+            JsonObject battleLogJson = await battle.JoinBattle(ses1.User.UserName, ses2.User.UserName);
             
             reply = new JsonObject()
             {
                 ["success"] = true,
                 ["message"] = "Battle has finished.",
-                ["battle_log"] = battleLog
+                ["battle_log"] = battleLogJson
             };
             status = HttpStatusCodes.OK;
             
@@ -55,5 +56,6 @@ public class BattleHandler : Handler, IHandler
         e2.Reply(status, reply?.ToJsonString());
 
     }
+
     
 }

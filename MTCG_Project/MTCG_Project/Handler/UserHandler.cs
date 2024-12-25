@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MTCG_Project.Models.Users;
+using MTCG_Project.Models.Stats;
 using MTCG_Project.Models.Card;
 using System.Net;
 using System.Text.Json.Nodes;
@@ -194,14 +195,14 @@ namespace MTCG_Project.Handler
                     throw new Exception("Unauthorized");
                 }
 
-                Stats stats = await Stats.Get(ses.User.UserName);
+                Stat stat = await Stat.Get(ses.User.UserName);
                 
                 JsonObject? statsObject = new JsonObject(){
-                    ["battles_played"] = stats.Battles_played,
-                    ["wins"] = stats.Wins,
-                    ["losses"] = stats.Losses,
-                    ["draws"] = stats.Draws,
-                    ["elo"] = stats.Elo
+                    ["battles_played"] = stat.Battles_played,
+                    ["wins"] = stat.Wins,
+                    ["losses"] = stat.Losses,
+                    ["draws"] = stat.Draws,
+                    ["elo"] = stat.Elo
                 };
                 
                 JsonObject? statsResponse = new JsonObject(){
