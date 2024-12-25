@@ -265,7 +265,7 @@ namespace MTCG_Project.Handler
                     playerStat["wins"] = entry.Item2.Wins;
                     playerStat["losses"] = entry.Item2.Losses;
                     playerStat["draws"] = entry.Item2.Draws;
-                    scoreboardObject.Add("player_" + (i++), playerStat);
+                    scoreboardObject.Add("rank_" + (i++), playerStat);
                 }
 
                 status = HttpStatusCodes.OK;
