@@ -299,4 +299,34 @@ draws = draws + 1,
             throw new Exception(ex.Message);
         }
     }
+
+    public static async Task<List<(string, Stat)>> GetScoreboard()
+    {
+        try
+        {
+            List<(string, Stat)> scoreboard = new List<(string, Stat)>();
+
+            await using var conn = await DB_connection.connectDB();
+            await using var cmd = new NpgsqlCommand("SELECT * FROM stats ORDER BY elo DESC", conn);
+            await using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    string username = reader.GetString(1);
+                    int battles_played = reader.GetInt32(2);
+                    int wins = reader.GetInt32(3);
+                    int losses = reader.GetInt32(4);
+                    int draws = reader.GetInt32(5);
+                    int elo = reader.GetInt32(6);
+                    Stat stat = new Stat(battles_played, wins, losses, draws, elo);
+                    scoreboard.Add((username, stat));
+                }
+            }
+            return scoreboard;
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
 }
