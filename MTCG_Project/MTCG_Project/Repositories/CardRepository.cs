@@ -12,6 +12,43 @@ public class CardRepository
 
     private const int num_cards_in_package = 5;
     private const int num_cards_in_deck = 4;
+
+    public static async Task<ICard> GetCard(string card_name)
+    {
+        try
+        {
+            ICard card = null;
+            await using var conn = await DB_connection.connectDB();
+            await using var cmd = new NpgsqlCommand("SELECT  card_type, name, damage, element, monster FROM cards WHERE name = @n", conn);
+            cmd.Parameters.AddWithValue("n", card_name);
+            await using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    string card_type = reader.GetString(0);
+                    string name = reader.GetString(1);
+                    int damage = reader.GetInt32(2);
+                    Element element = (Element)Enum.Parse(typeof(Element), reader.GetString(3), true);
+                    
+                    if (card_type == "Spellcard")
+                    {
+                        card = new Spell_Card(name, damage, element);
+                    }
+                    else if (card_type == "Monstercard")
+                    {
+                        Monster monster = (Monster)Enum.Parse(typeof(Monster), reader.GetString(4), true);
+                        card = new Monster_Card(name, damage, element, monster);
+                    }
+                }
+
+                return card;
+            }
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
     public static async Task<Stack> GetStack(string username)
     {
         try

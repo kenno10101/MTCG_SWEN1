@@ -1,6 +1,7 @@
 using MTCG_Project.Exceptions;
 using MTCG_Project.Handler;
 using MTCG_Project.Interfaces;
+using static MTCG_Project.Misc.Enums;
 using MTCG_Project.Models.Stats;
 using MTCG_Project.Models.Users;
 using Npgsql;
@@ -218,12 +219,12 @@ public class UserRepository
         }
     }
 
-    public static async Task UpdateStats(string username1, string username2, string result)
+    public static async Task UpdateStats(string username1, string username2, Battleresult result)
     {
         string queryString = string.Empty;
         switch (result)
         {
-            case ("win"):
+            case (Battleresult.Win):
                 queryString = @"
 UPDATE ""stats"" SET
 battles_played = battles_played + 1,
@@ -231,7 +232,7 @@ wins = wins + 1,
 elo = elo + 5
 ";
                 break;
-            case ("loss"):
+            case (Battleresult.Loss):
                 queryString = @"
 UPDATE ""stats"" SET
 battles_played = battles_played + 1,
@@ -239,7 +240,7 @@ losses = losses + 1,
 elo = elo - 3
 ";
                 break;
-            case ("draw"):
+            case (Battleresult.Draw):
                 queryString = @"
 UPDATE ""stats"" SET
 battles_played = battles_played + 1,
@@ -254,7 +255,7 @@ draws = draws + 1,
 
         switch (result)
         {
-            case ("win"):
+            case (Battleresult.Win):
                 queryString += @"
 UPDATE ""stats"" SET
 battles_played = battles_played + 1,
@@ -262,7 +263,7 @@ losses = losses + 1,
 elo = elo - 3
 ";
                 break;
-            case ("loss"):
+            case (Battleresult.Loss):
                 queryString += @"
 UPDATE ""stats"" SET
 battles_played = battles_played + 1,
@@ -270,7 +271,7 @@ wins = wins + 1,
 elo = elo + 5
 ";
                 break;
-            case ("draw"):
+            case (Battleresult.Draw):
                 queryString += @"
 UPDATE ""stats"" SET
 battles_played = battles_played + 1,

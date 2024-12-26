@@ -10,11 +10,12 @@ namespace MTCG_Project.Misc
     {
         public enum Cardtype
         {
-            Spell,
-            Monster
+            Spellcard,
+            Monstercard
         }
         public enum Monster
         {
+            Null,
             Goblin,
             Dragon,
             Wizard,
@@ -28,6 +29,19 @@ namespace MTCG_Project.Misc
             Water,
             Fire,
             Normal
+        }
+        public enum Battleresult
+        {
+            Win,
+            Loss,
+            Draw
+        }
+
+        public enum Tradingstatus
+        {
+            Open,
+            Done,
+            Deleted
         }
     }
 }

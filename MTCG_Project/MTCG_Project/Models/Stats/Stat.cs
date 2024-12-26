@@ -1,3 +1,4 @@
+using static MTCG_Project.Misc.Enums;
 using MTCG_Project.Repositories;
 
 namespace MTCG_Project.Models.Stats;
@@ -43,7 +44,7 @@ public class Stat
         }
     }
 
-    public static async Task Update(string username1, string username2, string result)
+    public static async Task Update(string username1, string username2, Battleresult result)
     {
         try
         {   
