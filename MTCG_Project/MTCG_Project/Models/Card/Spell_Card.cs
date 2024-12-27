@@ -22,5 +22,20 @@ namespace MTCG_Project.Models.Card
             Damage = damage;
             Element = element;
         }
+        
+        public override bool Equals(object obj)
+        {
+            if (obj is not Spell_Card otherCard)
+                return false;
+
+            return Name == otherCard.Name &&
+                   Element == otherCard.Element &&
+                   Damage == otherCard.Damage;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, Element, Damage);
+        }
     }
 }

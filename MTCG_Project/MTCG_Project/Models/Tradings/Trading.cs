@@ -8,20 +8,23 @@ namespace MTCG_Project.Models.Tradings;
 
 public class Trading
 {
-    
-    public String trade_creator;
-    public String trade_acceptor;
-    public Tradingstatus trading_status;
-    public ICard card_offer;
-    public Card_Requirement card_requirement;
+    public readonly int id;
+    public readonly String trade_creator;
+    public readonly String trade_acceptor;
+    public readonly Tradingstatus trading_status;
+    public readonly ICard card_offer;
+    public readonly Card_Requirement card_requirement;
+    public readonly ICard card_received;
 
-    public Trading(string tradeCreator, string tradeAcceptor, Tradingstatus tradingStatus, ICard cardOffer, Card_Requirement cardRequirement)
+    public Trading(int id, string tradeCreator, string tradeAcceptor, Tradingstatus tradingStatus, ICard cardOffer, Card_Requirement cardRequirement, ICard cardReceived)
     {
+        this.id = id;
         trade_creator = tradeCreator;
         trade_acceptor = tradeAcceptor;
         trading_status = tradingStatus;
         card_offer = cardOffer;
         card_requirement = cardRequirement;
+        card_received = cardReceived;
     }
 
     public static async Task Create(string username, ICard card_offer, Card_Requirement card_request)
@@ -52,27 +55,27 @@ public class Trading
         }
     }
     
-    // public static async Task Trade(int trade_id)
-    // {
-    //     try
-    //     {
-    //         await TradingRepository.Trade(trade_id);
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         throw new Exception(e.Message);
-    //     }
-    // }
-    //
-    // public static async Task Delete(int trade_id)
-    // {
-    //     try
-    //     {
-    //         await TradingRepository.Delete(trade_id);
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         throw new Exception(e.Message);
-    //     }
-    // }
+    public static async Task AcceptTrade(int trade_id, string username, string cardname)
+    {
+        try
+        {
+            await TradingRepository.Trade(trade_id, username, cardname);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
+    
+    public static async Task DeleteTrade(int trade_id)
+    {
+        try
+        {
+            await TradingRepository.Delete(trade_id);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
 }

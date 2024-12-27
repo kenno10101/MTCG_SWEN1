@@ -19,7 +19,7 @@ public class CardRepository
         {
             ICard card = null;
             await using var conn = await DB_connection.connectDB();
-            await using var cmd = new NpgsqlCommand("SELECT  card_type, name, damage, element, monster FROM cards WHERE name = @n", conn);
+            await using var cmd = new NpgsqlCommand("SELECT card_type, name, damage, element, monster FROM cards WHERE name = @n", conn);
             cmd.Parameters.AddWithValue("n", card_name);
             await using (var reader = await cmd.ExecuteReaderAsync())
             {
@@ -49,6 +49,7 @@ public class CardRepository
             throw new Exception(e.Message);
         }
     }
+    
     public static async Task<Stack> GetStack(string username)
     {
         try
@@ -58,8 +59,8 @@ public class CardRepository
 
             string queryString = @"
                 SELECT c.card_type, c.name, c.damage, c.element, c.monster FROM cards c
-                INNER JOIN stack s ON c.id = s.card_id
-                WHERE s.user_id = (SELECT id FROM users WHERE username = @un)
+                INNER JOIN stack s ON c.name = s.cardname
+                WHERE s.username = @un
                 ";
             await using var cmd = new NpgsqlCommand(queryString, conn);
             cmd.Parameters.AddWithValue("un", username);
@@ -127,37 +128,28 @@ public class CardRepository
     public static async Task BuyPackage(string username)
     {
         const string query = @"
-        WITH updated_user AS (
-            UPDATE ""users""
-            SET coins = coins - 5
-            WHERE username = @u
-            RETURNING id AS user_id
-        ),
-        random_package AS (
-            SELECT card_1_name, card_2_name, card_3_name, card_4_name, card_5_name
-            FROM ""packages""
-            ORDER BY RANDOM()
-            LIMIT 1
-        ),
-        card_ids AS (
-            SELECT 
-                (SELECT id FROM cards WHERE name = card_1_name) AS card_1_id,
-                (SELECT id FROM cards WHERE name = card_2_name) AS card_2_id,
-                (SELECT id FROM cards WHERE name = card_3_name) AS card_3_id,
-                (SELECT id FROM cards WHERE name = card_4_name) AS card_4_id,
-                (SELECT id FROM cards WHERE name = card_5_name) AS card_5_id
-            FROM random_package
-        )
-        INSERT INTO ""stack"" (user_id, card_id)
-        SELECT updated_user.user_id, card_id
-        FROM updated_user, card_ids, LATERAL (
-            VALUES 
-                (card_1_id), 
-                (card_2_id), 
-                (card_3_id), 
-                (card_4_id), 
-                (card_5_id)
-        ) AS card_list(card_id);";
+    WITH updated_user AS (
+        UPDATE ""users""
+        SET coins = coins - 5
+        WHERE username = @u
+        RETURNING username
+    ),
+    random_package AS (
+        SELECT card_1_name, card_2_name, card_3_name, card_4_name, card_5_name
+        FROM ""packages""
+        ORDER BY RANDOM()
+        LIMIT 1
+    )
+    INSERT INTO ""stack"" (username, cardname)
+    SELECT updated_user.username, cardname
+    FROM updated_user, random_package, LATERAL (
+        VALUES 
+            (card_1_name), 
+            (card_2_name), 
+            (card_3_name), 
+            (card_4_name), 
+            (card_5_name)
+    ) AS card_list(cardname);";
 
         try
         {
@@ -173,19 +165,14 @@ public class CardRepository
         }
     }
     
-    public static async Task CreateDeck(string username, string[] cards)
+    public static async Task CreateDeckEmpty(string username)
     {
         try
         {
             await using var conn = await DB_connection.connectDB();
-            await using (var cmd = new NpgsqlCommand("INSERT INTO \"deck\" (username, card_1_name, card_2_name, card_3_name, card_4_name) VALUES (@u, @c1, @c2, @c3, @c4)", conn))
+            await using (var cmd = new NpgsqlCommand("INSERT INTO \"deck\" (username) VALUES (@u)", conn))
             {
                 cmd.Parameters.AddWithValue("u", username);
-                for (int i = 0; i < num_cards_in_deck; i++)
-                {
-                    cmd.Parameters.AddWithValue("c" + (i + 1), (cards != null && i < cards.Length && cards[i] != null) ? cards[i] : DBNull.Value);
-                }
-
                 await cmd.ExecuteNonQueryAsync();
             }
         }

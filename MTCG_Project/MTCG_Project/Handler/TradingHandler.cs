@@ -17,6 +17,8 @@ public class TradingHandler : Handler, IHandler
     {
         bool is_CreateTradeDealRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/tradings") && (e.Method == "POST");
         bool is_GetAllTradeDealsRequest = (e.Path.TrimEnd('/', ' ', '\t') == "/tradings") && (e.Method == "GET");
+        bool is_AcceptTradeDealRequest = (e.Path.StartsWith("/tradings/")) && (e.Method == "POST");
+        bool is_DeleteTradeDealRequest = (e.Path.StartsWith("/tradings/")) && (e.Method == "DELETE");
 
         if (is_CreateTradeDealRequest)
         {
@@ -26,11 +28,18 @@ public class TradingHandler : Handler, IHandler
         {
             return getAllTradeDeals(e).GetAwaiter().GetResult();
         }
-
+        else if (is_AcceptTradeDealRequest)
+        {
+            return acceptTradeDeal(e).GetAwaiter().GetResult();
+        }
+        else if (is_DeleteTradeDealRequest)
+        {
+            return deleteTradeDeal(e).GetAwaiter().GetResult();
+        }
 
         return false;
     }
-    
+
     private static async Task<bool> createTradeDeal(HttpSvrEventArgs e)
     {
         JsonObject? reply = new JsonObject()
@@ -39,7 +48,7 @@ public class TradingHandler : Handler, IHandler
             ["message"] = "Invalid request."
         };
         int status = HttpStatusCodes.BAD_REQUEST;
-        
+
         try
         {
             (bool Success, User? User) ses = await Token.Authenticate_Request(e);
@@ -49,7 +58,7 @@ public class TradingHandler : Handler, IHandler
                 status = HttpStatusCodes.UNAUTHORIZED;
                 throw new Exception("Unauthorized");
             }
-            
+
             JsonNode? json = JsonNode.Parse(e.Payload);
             if (json != null)
             {
@@ -59,10 +68,12 @@ public class TradingHandler : Handler, IHandler
                     Enum.Parse<Monster>((string)json["monster"], true),
                     (int)json["minDamage"],
                     (int)json["maxDamage"]
-                    );
-                
-                await Trading.Create(ses.User.UserName, ses.User._deck.cards.FirstOrDefault(card => card.Name == (string)json["cardname_to_offer"]), card_requirement);
-                
+                );
+
+                await Trading.Create(ses.User.UserName,
+                    ses.User._deck.cards.FirstOrDefault(card => card.Name == (string)json["cardname_to_offer"]),
+                    card_requirement);
+
                 reply = new JsonObject() { ["success"] = true, ["message"] = "Create Trade Deal success" };
                 status = HttpStatusCodes.OK;
             }
@@ -75,7 +86,7 @@ public class TradingHandler : Handler, IHandler
         e.Reply(status, reply?.ToJsonString());
         return true;
     }
-    
+
     private static async Task<bool> getAllTradeDeals(HttpSvrEventArgs e)
     {
         JsonObject? reply = new JsonObject() { ["success"] = false, ["message"] = "Invalid request." };
@@ -83,7 +94,6 @@ public class TradingHandler : Handler, IHandler
 
         try
         {
-
             (bool Success, User? User) ses = await Token.Authenticate_Request(e);
 
             if (!ses.Success)
@@ -101,10 +111,11 @@ public class TradingHandler : Handler, IHandler
             {
                 JsonObject? tradeDealObject = new JsonObject()
                 {
-                    ["trade_creator"] =  tradeDeal.trade_creator,
-                    ["trade_acceptor"] =  tradeDeal.trade_acceptor,
-                    ["trading_status"] =  tradeDeal.trading_status.ToString(),
-                    ["card_offer"] =  tradeDeal.card_offer.Name
+                    ["trade_id"] = tradeDeal.id,
+                    ["trade_creator"] = tradeDeal.trade_creator,
+                    ["trade_acceptor"] = tradeDeal.trade_acceptor,
+                    ["trading_status"] = tradeDeal.trading_status.ToString(),
+                    ["card_offer"] = tradeDeal.card_offer.Name
                 };
                 JsonObject? tradeDealObjectRequirement = new JsonObject()
                 {
@@ -115,11 +126,11 @@ public class TradingHandler : Handler, IHandler
                     ["maxDamage"] = tradeDeal.card_requirement.maxDamage.ToString()
                 };
                 tradeDealObject.Add("card_requirement", tradeDealObjectRequirement);
-                tradeDealsResponse.Add("trade"+ (i++), tradeDealObject);
+                tradeDealsResponse.Add("trade" + (i++), tradeDealObject);
             }
 
             reply.Add("tradeDealsResponse", tradeDealsResponse);
-            
+
             status = HttpStatusCodes.OK;
             reply["success"] = true;
             reply["message"] = "Query of trade deals stack success.";
@@ -137,4 +148,76 @@ public class TradingHandler : Handler, IHandler
         return true;
     }
 
+    private static async Task<bool> acceptTradeDeal(HttpSvrEventArgs e)
+    {
+        JsonObject? reply = new JsonObject()
+        {
+            ["success"] = false,
+            ["message"] = "Invalid request."
+        };
+        int status = HttpStatusCodes.BAD_REQUEST;
+
+        try
+        {
+            (bool Success, User? User) ses = await Token.Authenticate_Request(e);
+
+            if (!ses.Success)
+            {
+                status = HttpStatusCodes.UNAUTHORIZED;
+                throw new Exception("Unauthorized");
+            }
+
+            JsonNode? json = JsonNode.Parse(e.Payload);
+            if (json != null)
+            {
+                string trade_id_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+                await Trading.AcceptTrade(int.Parse(trade_id_from_path), ses.User.UserName,
+                    ses.User._deck.cards.FirstOrDefault(card => card.Name == (string)json["card_name"]).Name);
+
+                reply = new JsonObject() { ["success"] = true, ["message"] = "Trade success" };
+                status = HttpStatusCodes.OK;
+            }
+        }
+        catch (Exception ex)
+        {
+            reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Error handling request." };
+        }
+
+        e.Reply(status, reply?.ToJsonString());
+        return true;
+    }
+
+    private static async Task<bool> deleteTradeDeal(HttpSvrEventArgs e)
+    {
+        JsonObject? reply = new JsonObject()
+        {
+            ["success"] = false,
+            ["message"] = "Invalid request."
+        };
+        int status = HttpStatusCodes.BAD_REQUEST;
+
+        try
+        {
+            (bool Success, User? User) ses = await Token.Authenticate_Request(e);
+
+            if (!ses.Success)
+            {
+                status = HttpStatusCodes.UNAUTHORIZED;
+                throw new Exception("Unauthorized");
+            }
+
+            string trade_id_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+            await Trading.DeleteTrade(int.Parse(trade_id_from_path));
+
+            reply = new JsonObject() { ["success"] = true, ["message"] = "Delete Trade success" };
+            status = HttpStatusCodes.OK;
+        }
+        catch (Exception ex)
+        {
+            reply = new JsonObject() { ["success"] = false, ["message"] = ex.Message ?? "Error handling request." };
+        }
+
+        e.Reply(status, reply?.ToJsonString());
+        return true;
+    }
 }

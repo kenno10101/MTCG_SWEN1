@@ -67,10 +67,6 @@ namespace MTCG_Project.Network
                         await BattleHandler.joinBattle(e1, e2);
                     }
                 }
-                else
-                {
-                    eventArgs.Reply(200, "\"Waiting for another player...\"", false);
-                }
             }
             else
             {

@@ -24,5 +24,20 @@ namespace MTCG_Project.Models.Card
         }
         public Monster? GetMonsterType() => Monster;
 
+        public override bool Equals(object obj)
+        {
+            if (obj is not Monster_Card otherCard)
+                return false;
+
+            return Name == otherCard.Name &&
+                   Element == otherCard.Element &&
+                   Damage == otherCard.Damage &&
+                   Monster == otherCard.Monster;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Name, Element, Damage, Monster);
+        }
     }
 }

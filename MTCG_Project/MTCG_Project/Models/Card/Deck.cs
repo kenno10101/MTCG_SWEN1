@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MTCG_Project.Interfaces;
+using MTCG_Project.Models.Users;
 using MTCG_Project.Repositories;
 
 namespace MTCG_Project.Models.Card
@@ -33,12 +34,11 @@ namespace MTCG_Project.Models.Card
             cards = new List<ICard>();
         }
 
-        public static async Task Create(string username, string[] cards = null)
+        public static async Task CreateInit(string username)
         {
             try
             {
-                // cards should be cards that can only come from stack
-                await CardRepository.CreateDeck(username, cards);
+                await CardRepository.CreateDeckEmpty(username);
             }
             catch (Exception ex)
             {
@@ -58,11 +58,14 @@ namespace MTCG_Project.Models.Card
             }
         }
 
-        public static async Task Update(string username, string[] cards = null)
+        public static async Task Update(string username, string[] cards)
         {
             try
             {
-                // cards should be cards that can only come from stack
+                if (!await checkIfCardsInStack(username, cards))
+                {
+                    throw new Exception("Error: trying to add card that doesn't belong to your stack.");
+                }
                 await CardRepository.UpdateDeck(username, cards);
             }
             catch (Exception ex)
@@ -70,5 +73,26 @@ namespace MTCG_Project.Models.Card
                 throw new Exception(ex.Message);
             }
         }
+
+        public static async Task<bool> checkIfCardsInStack(string username, string[] cards)
+        {
+            User user = await User.Get(username);
+            if (cards != null)
+            {
+                foreach (var deck_card_name in cards)
+                {
+                    ICard deck_card = await ICard.getCard(deck_card_name);
+                    if (!user._stack.cards.Contains(deck_card))
+                    {
+                        return false;
+                    }
+                    // prevents using same card twice in deck
+                    user._stack.cards.Remove(deck_card);
+                }
+            }
+            return true;
+        }
+        
+        
     }
 }
