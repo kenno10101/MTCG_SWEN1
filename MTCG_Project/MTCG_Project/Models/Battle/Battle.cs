@@ -57,10 +57,7 @@ namespace MTCG_Project.Models.Battle
 
             Random rnd = new();
             var card_1 = deck_1.cards[rnd.Next(0, deck_1.cards.Count)];
-            BattleLog += $"Player 1 selected card \"{card_1.Name}\" for this round.\n";
-
             var card_2 = deck_2.cards[rnd.Next(0, deck_2.cards.Count)];
-            BattleLog += $"Player 2 selected card \"{card_2.Name}\" for this round.\n";
 
             for (int i = 0; i < 100; i++)
             {
@@ -69,17 +66,16 @@ namespace MTCG_Project.Models.Battle
                 if (player_1_round_winner)
                 {
                     card_2 = deck_2.cards[rnd.Next(0, deck_2.cards.Count)];
-                    BattleLog += $"Player 2 selected card \"{card_2.Name}\" for this round.\n";
-
                     player_1_round_winner = false;
                 }
                 else if (player_2_round_winner)
                 {
                     card_1 = deck_1.cards[rnd.Next(0, deck_1.cards.Count)];
-                    BattleLog += $"Player 1 selected card \"{card_1.Name}\" for this round.\n";
-
                     player_2_round_winner = false;
                 }
+                
+                BattleLog += $"Player 1 selected card \"{card_1.Name}\" for this round.\n";
+                BattleLog += $"Player 2 selected card \"{card_2.Name}\" for this round.\n";
 
 
                 // add point to round winner and add opponent's card to winner's deck
@@ -243,10 +239,10 @@ namespace MTCG_Project.Models.Battle
             await Stat.Update(user_1.UserName, user_2.UserName, result);
             await this.Save();
             
-            return BattleLogParser(this.BattleLog);
+            return this.BattleLogParser(this.BattleLog);
         }
 
-        private static JsonObject BattleLogParser(string battleLog)
+        private JsonObject BattleLogParser(string battleLog)
         {
             var rounds = new JsonArray();
             var lines = battleLog.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -292,7 +288,8 @@ namespace MTCG_Project.Models.Battle
             {
                 ["player1Points"] = ExtractValueFromLine(lines[^3], "Player 1 Points: "),
                 ["player2Points"] = ExtractValueFromLine(lines[^2], "Player 2 Points: "),
-                ["numberOfRounds"] = ExtractValueFromLine(lines[^1], "Number of Rounds: ")
+                ["numberOfRounds"] = ExtractValueFromLine(lines[^1], "Number of Rounds: "),
+                ["winner"] = Winner
             };
 
             return new JsonObject

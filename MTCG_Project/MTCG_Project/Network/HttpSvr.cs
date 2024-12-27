@@ -43,8 +43,6 @@ namespace MTCG_Project.Network
                 int read = await client.GetStream().ReadAsync(buffer, 0, buffer.Length);
                 data += Encoding.ASCII.GetString(buffer, 0, read);
             }
-
-            HttpSvrEventArgs eventArgs = new(client, data);
             
             // Pairing logic
             if (data.Contains("battle")) // Assuming client sends a "battle" request
