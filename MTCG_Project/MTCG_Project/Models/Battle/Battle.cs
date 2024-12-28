@@ -221,11 +221,15 @@ namespace MTCG_Project.Models.Battle
 
         public async Task<JsonObject> JoinBattle(string username_1, string username_2)
         {
+            if (username_1 == username_2)
+            {
+                throw new Exception("Cannot battle yourself.");
+            }
+            
             User user_1 = await User.Get(username_1);
             User user_2 = await User.Get(username_2);
 
             await this.Fight(user_1, user_2);
-
             
             Battleresult result = Battleresult.Draw;
             if (this.Player_1_points > this.Player_2_points)

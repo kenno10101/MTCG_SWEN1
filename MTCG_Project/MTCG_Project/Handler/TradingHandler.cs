@@ -205,8 +205,14 @@ public class TradingHandler : Handler, IHandler
                 status = HttpStatusCodes.UNAUTHORIZED;
                 throw new Exception("Unauthorized");
             }
-
+            
             string trade_id_from_path = e.Path.Substring(e.Path.LastIndexOf('/') + 1);
+            
+            Trading trade = await TradingRepository.Get(int.Parse(trade_id_from_path));
+            if (trade.trade_creator != ses.User.UserName)
+            {
+                throw new Exception("Cannot delete trade offers of others.");
+            }
             await Trading.DeleteTrade(int.Parse(trade_id_from_path));
 
             reply = new JsonObject() { ["success"] = true, ["message"] = "Delete Trade success" };

@@ -59,6 +59,17 @@ public class Trading
     {
         try
         {
+            Trading trade = await TradingRepository.Get(trade_id);
+            if (trade.trade_creator == username)
+            {
+                throw new Exception("Cannot trade with yourself.");
+            }
+
+            ICard card_requirement = await ICard.getCard(cardname);
+            if (!trade.card_requirement.meetsRequirement(card_requirement))
+            {
+                throw new Exception("Card does not meet requirements.");
+            }
             await TradingRepository.Trade(trade_id, username, cardname);
         }
         catch (Exception e)

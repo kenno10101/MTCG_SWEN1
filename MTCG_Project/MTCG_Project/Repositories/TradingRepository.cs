@@ -85,11 +85,56 @@ public class TradingRepository
             throw new Exception(e.Message);
         }
     }
+    
+    public static async Task<Trading> Get(int trade_id)
+    {
+        try
+        {
+            Trading trade = null;
+            
+            await using var conn = await DB_connection.connectDB();
+            await using var cmd = new NpgsqlCommand("SELECT * FROM tradings WHERE status = 'Open'::enum_trading_status AND id = @t_id", conn);
+            cmd.Parameters.AddWithValue("t_id", trade_id);
+            await using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    int id = reader.GetInt32(0);
+                    string trade_creator = reader.GetString(1);
+                    string trade_acceptor = reader.IsDBNull(2) ? null : reader.GetString(2);
+                    Tradingstatus tradingstatus = Enum.Parse<Tradingstatus>(reader.GetString(3), true);
+
+                    ICard card_offer = await CardRepository.GetCard(reader.GetString(4));
+                    Card_Requirement card_requirement = new Card_Requirement(
+                        Enum.Parse<Cardtype>(reader.GetString(5), true),
+                        Enum.Parse<Element>(reader.GetString(6), true),
+                        reader.IsDBNull(7) ? Monster.Null : Enum.Parse<Monster>(reader.GetString(7), true),
+                        reader.GetInt32(8),
+                        reader.GetInt32(9)
+                    );
+                    ICard card_received =
+                        reader.IsDBNull(10) ? null : await CardRepository.GetCard(reader.GetString(10));
+
+                    trade = new Trading(id, trade_creator, trade_acceptor, tradingstatus, card_offer,
+                        card_requirement, card_received);
+                }
+            }
+            
+            if (trade == null)
+            {
+                throw new Exception("Trade not found.");
+            }
+
+            return trade;
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
 
     public static async Task Trade(int trade_id, string username, string cardname)
     {
-        // cant trade with yourself
-        // check card requirement
         // update each users deck after trade
 
         try
