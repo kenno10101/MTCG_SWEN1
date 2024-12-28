@@ -96,7 +96,43 @@ public class CardRepository
             throw new Exception(e.Message);
         }
     }
+    
+    public static async Task UpdateStack(string username, string oldcard, string newcard)
+    {
+        try
+        {
+            await using var conn = await DB_connection.connectDB();
+            await using (var cmd = new NpgsqlCommand(@"
+DELETE FROM stack
+WHERE id = (
+    SELECT id
+    FROM stack
+    WHERE username = @u AND cardname = @oldc
+    ORDER BY id ASC
+    LIMIT 1
+);
+INSERT INTO stack (username, cardname)
+VALUES (@u, @newc);"
+, conn))
+            {
+                cmd.Parameters.AddWithValue("u", username);
+                cmd.Parameters.AddWithValue("oldc", oldcard);
+                cmd.Parameters.AddWithValue("newc", newcard);
 
+                int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                if (rowsAffected == 0)
+                {
+                    throw new UserException("There was an error updating the user's deck");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+    
     public static async Task CreatePackage(string[] cards)
     {
         try

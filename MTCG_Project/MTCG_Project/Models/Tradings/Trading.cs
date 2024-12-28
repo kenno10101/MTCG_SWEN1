@@ -54,7 +54,19 @@ public class Trading
             throw new Exception(e.Message);
         }
     }
-    
+
+    public static async Task<Trading> Get(int trade_id)
+    {
+        try
+        {
+            return await TradingRepository.Get(trade_id);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
+
     public static async Task AcceptTrade(int trade_id, string username, string cardname)
     {
         try

@@ -8,6 +8,7 @@ using MTCG_Project.Models.Card;
 using MTCG_Project.Models.Tradings;
 using Npgsql;
 using NpgsqlTypes;
+using System.Reflection.Metadata.Ecma335;
 
 namespace MTCG_Project.Repositories;
 
@@ -93,7 +94,7 @@ public class TradingRepository
             Trading trade = null;
             
             await using var conn = await DB_connection.connectDB();
-            await using var cmd = new NpgsqlCommand("SELECT * FROM tradings WHERE status = 'Open'::enum_trading_status AND id = @t_id", conn);
+            await using var cmd = new NpgsqlCommand("SELECT * FROM tradings WHERE id = @t_id", conn);
             cmd.Parameters.AddWithValue("t_id", trade_id);
             await using (var reader = await cmd.ExecuteReaderAsync())
             {
@@ -155,6 +156,28 @@ public class TradingRepository
                     throw new Exception("Trade ID doesn't exist or Trade is not Open");
                 }
             }
+            Trading trade = await Trading.Get(trade_id);
+            // get each user's decks
+            Deck deck_creator = await Deck.Get(trade.trade_creator);
+            Deck deck_acceptor = await Deck.Get(trade.trade_acceptor);
+
+            // find the card in each deck
+            int index_creator = deck_creator.cards.FindIndex(card => card.Name == trade.card_offer.Name);
+            int index_acceptor = deck_acceptor.cards.FindIndex(card => card.Name == trade.card_received.Name);
+            // swap the cards in the decks
+            ICard temp = deck_creator.cards[index_creator];
+            deck_creator.cards[index_creator] = deck_acceptor.cards[index_acceptor];
+            deck_acceptor.cards[index_acceptor] = temp;
+
+            // update stack
+            Stack.Update(trade.trade_creator, trade.card_offer.Name, trade.card_received.Name);
+            Stack.Update(trade.trade_acceptor, trade.card_received.Name, trade.card_offer.Name);
+
+            // update deck
+            Deck.Update(trade.trade_creator, deck_creator.cards.Select(card => card.Name).ToArray());
+            Deck.Update(trade.trade_acceptor, deck_acceptor.cards.Select(card => card.Name).ToArray());
+
+            
         }
         catch (Exception e)
         {

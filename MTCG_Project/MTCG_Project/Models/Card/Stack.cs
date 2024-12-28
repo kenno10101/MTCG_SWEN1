@@ -23,4 +23,16 @@ public class Stack
             throw new Exception(e.Message);
         }
     }
+
+    public static async Task Update(string username, string oldcard, string newcard)
+    {
+        try
+        {
+            await CardRepository.UpdateStack(username, oldcard, newcard);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
 }

@@ -70,6 +70,7 @@ public class TradingHandler : Handler, IHandler
                     (int)json["maxDamage"]
                 );
 
+                // refactor card ses.User._deck.cards.FirstOrDefault(card => card.Name == (string)json["cardname_to_offer"]) check if null beforehand
                 await Trading.Create(ses.User.UserName,
                     ses.User._deck.cards.FirstOrDefault(card => card.Name == (string)json["cardname_to_offer"]),
                     card_requirement);
