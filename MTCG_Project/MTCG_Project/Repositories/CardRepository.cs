@@ -1,4 +1,5 @@
 using MTCG_Project.Handler;
+using MTCG_Project.Network;
 using MTCG_Project.Interfaces;
 using static MTCG_Project.Misc.Enums;
 using MTCG_Project.Models.Card;

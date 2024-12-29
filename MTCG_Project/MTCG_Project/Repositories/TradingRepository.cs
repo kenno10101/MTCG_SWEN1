@@ -2,6 +2,7 @@ using System.Data;
 using System.Security.Cryptography;
 using static MTCG_Project.Misc.Enums;
 using MTCG_Project.Handler;
+using MTCG_Project.Network;
 using MTCG_Project.Interfaces;
 using MTCG_Project.Misc;
 using MTCG_Project.Models.Card;
