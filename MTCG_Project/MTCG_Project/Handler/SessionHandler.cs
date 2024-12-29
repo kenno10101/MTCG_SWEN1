@@ -36,7 +36,6 @@ namespace MTCG_Project.Handler
                 if (json != null)
                 {
                     (bool success, string token) login = await User.Logon((string)json["username"]!, (string)json["password"]!);
-
                     
                     if (!login.success)
                     {

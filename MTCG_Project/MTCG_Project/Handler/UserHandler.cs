@@ -13,6 +13,7 @@ using System.Text.Json.Nodes;
 using MTCG_Project.Exceptions;
 using System.Reflection.Metadata;
 using Npgsql;
+using MTCG_Project.Misc;
 
 namespace MTCG_Project.Handler
 {
@@ -64,9 +65,12 @@ namespace MTCG_Project.Handler
                 if (json != null)
                 {
                     // create user object
+                    string password = (string)json["password"];
+                    string passwordHashed = PasswordHasher.HashPassword(password);
+
                     await User.Create(
                         (string)json["username"],
-                        (string)json["password"],
+                        passwordHashed,
                         (string)json["name"],
                         (string)json["email"]);
 
@@ -158,11 +162,13 @@ namespace MTCG_Project.Handler
                 JsonNode? json = JsonNode.Parse(e.Payload);
                 if (json != null)
                 {
-                    // create user object
+                    string password = (string)json["password"];
+                    string passwordHashed = PasswordHasher.HashPassword(password);
+
                     await User.Update(
                         username_from_path,
                         (string?)json["username"],
-                        (string?)json["password"],
+                        passwordHashed,
                         (string?)json["name"],
                         (string?)json["email"]
                     );

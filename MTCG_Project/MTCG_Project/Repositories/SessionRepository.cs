@@ -36,7 +36,7 @@ namespace MTCG_Project.Repositories
             }
         }
 
-        public static async Task<bool> HasSession (string username)
+        public static async Task<bool> SessionExists (string username)
         {
             try
             {

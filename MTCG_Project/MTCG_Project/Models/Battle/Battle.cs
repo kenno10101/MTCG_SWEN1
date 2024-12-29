@@ -43,7 +43,7 @@ namespace MTCG_Project.Models.Battle
             { 1, 1, 0, 1, 1, 1, 1 }, // ork
             { 1, 1, 1, 1, 1, 1, 1 }, // knight
             { 1, 1, 1, 1, 1, 1, 1 }, // kraken
-            { 1, 1, 1, 1, 1, 1, 1 } // fireelf
+            { 1, 1, 1, 1, 1, 1, 1 } // elf
         };
 
         public async Task Fight(User user_1, User user_2)
@@ -159,11 +159,15 @@ namespace MTCG_Project.Models.Battle
 
                 if (monster_card_1.Monster == Monster.Kraken)
                 {
+                    BattleLog +=
+                $"Player 1's \"{card_1.Name}\" counters the Spellcard of Player 2's \"{card_2.Name}\"\n";
                     return monster_card_1;
                 }
 
                 if (monster_card_1.Monster == Monster.Knight && card_2.Element == Element.Water)
                 {
+                    BattleLog +=
+                $"Player 2's \"{card_2.Name}\" Spellcard of type Water counters the Monstercard Knight of Player 1's \"{card_1.Name}\"\n";
                     return card_2;
                 }
 
@@ -185,11 +189,15 @@ namespace MTCG_Project.Models.Battle
 
                 if (monster_card_2.Monster == Monster.Kraken)
                 {
+                    BattleLog +=
+                $"Player 2's \"{card_2.Name}\" counters the Spellcard of Player 1's \"{card_1.Name}\"\n";
                     return monster_card_2;
                 }
 
                 if (card_1.Element == Element.Water && monster_card_2.Monster == Monster.Knight)
                 {
+                    BattleLog +=
+                $"Player 1's \"{card_1.Name}\" Spellcard of type Water counters the Monstercard Knight of Player 2's \"{card_2.Name}\"\n";
                     return card_1;
                 }
 
@@ -260,6 +268,10 @@ namespace MTCG_Project.Models.Battle
                     roundActions.Add(line);
                 }
                 else if (line.Contains("dealt"))
+                {
+                    roundActions.Add(line);
+                }
+                else if (line.Contains("counters"))
                 {
                     roundActions.Add(line);
                 }

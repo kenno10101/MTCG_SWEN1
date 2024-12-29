@@ -15,14 +15,14 @@ namespace MTCG_Project.Misc
         }
         public enum Monster
         {
-            Null,
             Goblin,
             Dragon,
             Wizard,
             Ork,
             Knight,
             Kraken,
-            Elf
+            Elf,
+            Null
         }
         public enum Element
         {

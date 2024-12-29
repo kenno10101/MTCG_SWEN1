@@ -15,6 +15,7 @@ using MTCG_Project.Network;
 using MTCG_Project.Repositories;
 using Npgsql;
 using MTCG_Project.Handler;
+using MTCG_Project.Misc;
 
 namespace MTCG_Project.Models.Users
 {
@@ -142,13 +143,12 @@ namespace MTCG_Project.Models.Users
             }
         }
         
-
         public static async Task<(bool Success, string Token)> Logon(string userName, string password)
         {
             try
             {
                 User user = await Get(userName);
-                if (user.Password != password)
+                if (!PasswordHasher.VerifyPassword(password, user.Password))
                 {
                     return (false, string.Empty);
                 }
