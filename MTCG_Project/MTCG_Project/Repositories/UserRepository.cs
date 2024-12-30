@@ -100,8 +100,11 @@ public class UserRepository
         string queryString = "UPDATE \"users\" SET";
 
         queryString += usernameChange ? usernameString : "";
+        queryString += usernameChange ? "," : "";
         queryString += passwordChange ? passwordString : "";
+        queryString += usernameChange || passwordChange ? "," : "";
         queryString += nameChange ? nameString : "";
+        queryString += usernameChange || passwordChange || nameChange ? "," : "";
         queryString += emailChange ? emailString : "";
 
         queryString += " WHERE username = @user";

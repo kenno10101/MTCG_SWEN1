@@ -79,7 +79,8 @@ namespace MTCG_Project.Models.Battle
 
 
                 // add point to round winner and add opponent's card to winner's deck
-                if (CardsRoundFight(card_1, card_2) == card_1)
+                ICard roundWinner = CardsRoundFight(card_1, card_2);
+                if (roundWinner == card_1)
                 {
                     points_player_1++;
                     BattleLog += $"Player 1's \"{card_1.Name}\" won this round.\n";
@@ -131,7 +132,7 @@ namespace MTCG_Project.Models.Battle
             Rounds = num_rounds;
         }
 
-        private ICard CardsRoundFight(ICard card_1, ICard card_2)
+        public ICard CardsRoundFight(ICard card_1, ICard card_2)
         {
             double card_1_battle_damage = 0;
             double card_2_battle_damage = 0;

@@ -10,7 +10,7 @@ using static MTCG_Project.Misc.Enums;
 namespace MTCG_Project.Models.Card
 {
   
-    internal class Spell_Card : ICard
+    public class Spell_Card : ICard
     {
         public string Name { get; private set; }
         public int Damage { get; private set; }
