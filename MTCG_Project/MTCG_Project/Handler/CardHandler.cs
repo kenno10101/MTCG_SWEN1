@@ -63,11 +63,6 @@ public class CardHandler : Handler, IHandler
                 throw new Exception("Unauthorized");
             }
 
-            if (ses.User.Coins < 5)
-            {
-                status = 403;
-                throw new Exception("Not enough money for buying a card package");
-            }
             await Package.BuyPackage(ses.User.UserName);
             reply = new JsonObject() { ["success"] = true, ["message"] = "Buy Package success" };
             status = HttpStatusCodes.OK;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MTCG_Project.Interfaces;
+using MTCG_Project.Models.Users;
 using MTCG_Project.Repositories;
 
 namespace MTCG_Project.Models.Card
@@ -15,6 +16,11 @@ namespace MTCG_Project.Models.Card
         {
             try
             {
+                User user = await User.Get(username);
+                if (user.Coins < 5)
+                {
+                    throw new Exception("Not enough money for buying a card package");
+                }
                 await CardRepository.BuyPackage(username);
             }
             catch (Exception e)
