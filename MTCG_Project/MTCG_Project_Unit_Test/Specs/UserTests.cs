@@ -8,7 +8,7 @@ using System.Data.Common;
 using Npgsql;
 using System;
 
-namespace MTCG_Project_Unit_Test.Spec
+namespace MTCG_Project_Unit_Test.Specs
 {
     public class UserTests
     {
