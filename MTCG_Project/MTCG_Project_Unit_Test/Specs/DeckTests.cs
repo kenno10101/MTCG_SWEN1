@@ -9,7 +9,7 @@ using Npgsql;
 using System;
 using MTCG_Project.Models.Card;
 
-namespace MTCG_Project_Unit_Test.Spec
+namespace MTCG_Project_Unit_Test.Specs
 {
     public class DeckTest
     {

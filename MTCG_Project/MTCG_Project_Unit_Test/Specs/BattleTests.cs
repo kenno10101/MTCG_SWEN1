@@ -13,7 +13,7 @@ using MTCG_Project.Interfaces;
 using System.Text.Json.Nodes;
 using MTCG_Project.Models.Stats;
 
-namespace MTCG_Project_Unit_Test.Spec
+namespace MTCG_Project_Unit_Test.Specs
 {
     public class BattleTests
     {
@@ -22,6 +22,12 @@ namespace MTCG_Project_Unit_Test.Spec
         public async Task Setup()
         {
             DB_connection.connString = "Host=localhost;Port=5431;Username=kenn;Password=kenn1234;Database=MTCG_project_test";
+            
+            await using var conn = await DB_connection.connectDB();
+            await using (var cmd = new NpgsqlCommand("DELETE FROM users", conn))
+            {
+                await cmd.ExecuteNonQueryAsync();
+            }
         }
 
         [Test]
@@ -142,6 +148,7 @@ namespace MTCG_Project_Unit_Test.Spec
             user = await User.Get(user.UserName);
             string[] cards = { user._stack.cards[0].Name, user._stack.cards[1].Name, user._stack.cards[2].Name, user._stack.cards[3].Name };
             await Deck.Update(user.UserName, cards);
+            user = await User.Get(user.UserName);
 
             User user2 = new User("user2", PasswordHasher.HashPassword("test"), "test", "user2@gmail.com");
             await User.Create(user2.UserName, user2.Password, user2.FullName, user2.EMail);
@@ -149,9 +156,10 @@ namespace MTCG_Project_Unit_Test.Spec
             user2 = await User.Get(user2.UserName);
             string[] cards2 = { user2._stack.cards[0].Name, user2._stack.cards[1].Name, user2._stack.cards[2].Name, user2._stack.cards[3].Name };
             await Deck.Update(user2.UserName, cards2);
+            user2 = await User.Get(user2.UserName);
 
             // Act
-            JsonObject battle_log_parsed = await battle.JoinBattle(user.UserName, user2.UserName);
+            JsonObject battle_log_parsed = await battle.JoinBattle(user, user2);
 
             // Assert
             Stat stats1 = await Stat.Get(user.UserName);
@@ -175,7 +183,7 @@ namespace MTCG_Project_Unit_Test.Spec
 
 
             // Act
-            var exception = Assert.ThrowsAsync<Exception>(async () => await battle.JoinBattle(user.UserName, user.UserName));
+            var exception = Assert.ThrowsAsync<Exception>(async () => await battle.JoinBattle(user, user));
 
             // Assert
             Stat stats1 = await Stat.Get(user.UserName);

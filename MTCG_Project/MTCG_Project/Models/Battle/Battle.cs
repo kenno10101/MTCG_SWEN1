@@ -46,7 +46,7 @@ namespace MTCG_Project.Models.Battle
             { 1, 1, 1, 1, 1, 1, 1 } // elf
         };
 
-        public async Task Fight(User user_1, User user_2)
+        public void Fight(User user_1, User user_2)
         {
             Deck deck_1 = user_1._deck;
             Deck deck_2 = user_2._deck;
@@ -228,17 +228,14 @@ namespace MTCG_Project.Models.Battle
             return card_1_battle_damage > card_2_battle_damage ? card_1 : card_2;
         }
 
-        public async Task<JsonObject> JoinBattle(string username_1, string username_2)
+        public async Task<JsonObject> JoinBattle(User user_1, User user_2)
         {
-            if (username_1 == username_2)
+            if (user_1.UserName == user_2.UserName)
             {
                 throw new Exception("Cannot battle yourself.");
             }
-            
-            User user_1 = await User.Get(username_1);
-            User user_2 = await User.Get(username_2);
 
-            await this.Fight(user_1, user_2);
+            this.Fight(user_1, user_2);
             
             Battleresult result = Battleresult.Draw;
             if (this.Player_1_points > this.Player_2_points)

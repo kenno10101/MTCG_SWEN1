@@ -16,7 +16,7 @@ namespace MTCG_Project.Network
         public event HttpSvrEventHandler? Incoming;
         public bool Active { get; private set; } = false;
         private readonly ConcurrentQueue<TcpClient> waitingClients = new();
-        private List<string> temp_data = new List<string>();
+        private readonly ConcurrentQueue<string> temp_data = new();
 
         public void Run()
         {
@@ -30,7 +30,7 @@ namespace MTCG_Project.Network
             while (Active)
             {
                 TcpClient client = _Listener.AcceptTcpClient();
-                HandleClient(client, buf);
+                Task.Run(() => HandleClient(client, buf));
             }
         }
         
@@ -50,17 +50,18 @@ namespace MTCG_Project.Network
                 if (!waitingClients.Contains(client)) // Avoid duplicate enqueue
                 {
                     waitingClients.Enqueue(client);
-                    temp_data.Add(data);
+                    temp_data.Enqueue(data);
                 }
                 if (waitingClients.Count >= 2)
                 {
                     // Pair two clients
-                    if (waitingClients.TryDequeue(out var client1) && waitingClients.TryDequeue(out var client2))
-                    {
-                        HttpSvrEventArgs e1 = new HttpSvrEventArgs(client1, temp_data[0]);
-                        HttpSvrEventArgs e2 = new HttpSvrEventArgs(client2, temp_data[1]);
+                    if (waitingClients.TryDequeue(out var client1) &&
+                        waitingClients.TryDequeue(out var client2) &&
+                        temp_data.TryDequeue(out var data1) &&
+                        temp_data.TryDequeue(out var data2)){
+                        HttpSvrEventArgs e1 = new HttpSvrEventArgs(client1, data1);
+                        HttpSvrEventArgs e2 = new HttpSvrEventArgs(client2, data2);
                         
-                        temp_data.RemoveRange(0, 2); 
                         
                         await BattleHandler.joinBattle(e1, e2);
                     }

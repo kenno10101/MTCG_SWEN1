@@ -36,7 +36,7 @@ public class BattleHandler : Handler, IHandler
             }
 
             Battle battle = new Battle();
-            JsonObject battleLogJson = await battle.JoinBattle(ses1.User.UserName, ses2.User.UserName);
+            JsonObject battleLogJson = await battle.JoinBattle(ses1.User, ses2.User);
             
             reply = new JsonObject()
             {

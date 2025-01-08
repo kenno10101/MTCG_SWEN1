@@ -21,10 +21,13 @@ namespace MTCG_Project.Repositories
                 await using var conn = await DB_connection.connectDB();
 
                 await using (var cmd = new NpgsqlCommand(
-                    "INSERT INTO \"sessions\" (token, user_id)" +
-                    "VALUES (@r, (SELECT users.id FROM users WHERE username = @u LIMIT 1))" +
-                    "ON CONFLICT (user_id) DO UPDATE SET token = EXCLUDED.token"
-                    , conn))
+                                 "INSERT INTO \"sessions\" (token, user_id)" +
+                                 "VALUES (@r, (SELECT users.id FROM users WHERE username = @u LIMIT 1))" +
+                                 "ON CONFLICT (user_id) DO UPDATE SET " +
+                                 "token = EXCLUDED.token, " +
+                                 "created_at = NOW(), " +
+                                 "expires_at = NOW() + interval '30 minutes'"
+                                 , conn))
                 {
                     cmd.Parameters.AddWithValue("r", rval);
                     cmd.Parameters.AddWithValue("u", user.UserName);
@@ -42,6 +45,7 @@ namespace MTCG_Project.Repositories
             try
             {
                 int rows = 0;
+                DateTime expires_at = DateTime.MinValue;
                 
                 await using var conn = await DB_connection.connectDB();
                 await using var cmd = new NpgsqlCommand("SELECT * FROM \"sessions\" WHERE user_id = (SELECT id FROM users WHERE username = @u LIMIT 1) LIMIT 1", conn);
@@ -51,11 +55,17 @@ namespace MTCG_Project.Repositories
                 {
                     while (await reader.ReadAsync())
                     {
+                        expires_at = reader.GetDateTime(4);
                         rows++;
                     }
                 }
 
                 if (rows != 1)
+                {
+                    return false;
+                }
+
+                if (expires_at < DateTime.Now.ToUniversalTime())
                 {
                     return false;
                 }

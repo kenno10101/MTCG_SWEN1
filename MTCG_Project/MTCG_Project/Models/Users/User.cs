@@ -73,6 +73,7 @@ namespace MTCG_Project.Models.Users
             _stats = stats;
         }
 
+        // unused
         public async Task Save(string token)
         {
             (bool Success, User? User) auth = await Token.Authenticate_Token(token);
