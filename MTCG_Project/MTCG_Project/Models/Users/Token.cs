@@ -61,7 +61,7 @@ namespace MTCG_Project.Models.Users
 
                 string username_from_token = i.Value[7..].Trim();
                 
-                if (Program.ALLOW_DEBUG_TOKEN && username_from_token.EndsWith("-debug"))
+                if ((Program.ALLOW_DEBUG_TOKEN && username_from_token.EndsWith("-debug")) || username_from_token.EndsWith("-mtcgToken"))
                 {
                     username_from_token = username_from_token.Split('-')[0];
                 }
