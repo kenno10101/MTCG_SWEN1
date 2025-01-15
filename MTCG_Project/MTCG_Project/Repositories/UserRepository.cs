@@ -7,6 +7,9 @@ using MTCG_Project.Models.Stats;
 using MTCG_Project.Models.Users;
 using Npgsql;
 using System.Data.Common;
+using System.Diagnostics;
+using MTCG_Project.Misc;
+using NpgsqlTypes;
 
 namespace MTCG_Project.Repositories;
 
@@ -198,25 +201,33 @@ public class UserRepository
         {
             await using var conn = await DB_connection.connectDB();
             await using var cmd = new NpgsqlCommand(
-                "SELECT battles_played, wins, losses, draws, elo FROM \"stats\" WHERE username = @u",
+                "SELECT battles_played, wins, losses, draws, elo, rank FROM \"stats\" WHERE username = @u",
                 conn);
             cmd.Parameters.AddWithValue("u", username);
 
-            string user = null;
-            int battles_played = 0, wins = 0, losses = 0, draws = 0, elo = 0;
+            Stat stat = null;
+
             await using (var reader = await cmd.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
-                    battles_played = reader.GetInt32(0);
-                    wins = reader.GetInt32(1);
-                    losses = reader.GetInt32(2);
-                    draws = reader.GetInt32(3);
-                    elo = reader.GetInt32(4);
+                    int battles_played = reader.GetInt32(0);
+                    int wins = reader.GetInt32(1);
+                    int losses = reader.GetInt32(2);
+                    int draws = reader.GetInt32(3);
+                    int elo = reader.GetInt32(4);
+                    Rank rank = Enum.Parse<Rank>(reader.GetString(5), true);
+
+                    stat = new Stat(battles_played, wins, losses, draws, elo, rank);
                 }
             }
 
-            return new Stat(battles_played, wins, losses, draws, elo);
+            if (stat == null)
+            {
+                throw new Exception("Stat not found.");
+            }
+
+            return stat;
         }
         catch (Exception e)
         {
@@ -299,11 +310,40 @@ draws = draws + 1,
 
                 await cmd.ExecuteNonQueryAsync();
             }
+
+            await updateRank(username1);
+            await updateRank(username2);
         }
         catch (Exception ex)
         {
             throw new Exception(ex.Message);
         }
+    }
+
+    private static async Task updateRank(string username)
+    {
+        try {
+
+            Stat user_stat = await GetStats(username);
+
+            Rank rank_after_update = EloRank.getRankByElo(user_stat.Elo);
+
+            string queryString = "UPDATE \"stats\" SET rank = @rank WHERE username = @u";
+
+            await using var conn = await DB_connection.connectDB();
+            await using (var cmd = new NpgsqlCommand(queryString, conn))
+            {
+                cmd.Parameters.AddWithValue("rank", NpgsqlDbType.Varchar, rank_after_update.ToString());
+                cmd.CommandText = cmd.CommandText.Replace("@rank", "@rank::enum_ranks");
+                cmd.Parameters.AddWithValue("u", username);
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+        } catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+
     }
 
     public static async Task<List<(string, Stat)>> GetScoreboard()
@@ -324,7 +364,8 @@ draws = draws + 1,
                     int losses = reader.GetInt32(4);
                     int draws = reader.GetInt32(5);
                     int elo = reader.GetInt32(6);
-                    Stat stat = new Stat(battles_played, wins, losses, draws, elo);
+                    Rank rank = Enum.Parse<Rank>(reader.GetString(7), true);
+                    Stat stat = new Stat(battles_played, wins, losses, draws, elo, rank);
                     scoreboard.Add((username, stat));
                 }
             }

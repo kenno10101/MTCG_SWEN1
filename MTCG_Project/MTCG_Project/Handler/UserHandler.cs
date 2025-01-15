@@ -214,7 +214,8 @@ namespace MTCG_Project.Handler
                     ["wins"] = stat.Wins,
                     ["losses"] = stat.Losses,
                     ["draws"] = stat.Draws,
-                    ["elo"] = stat.Elo
+                    ["elo"] = stat.Elo,
+                    ["rank"] = stat.Rank.ToString()
                 };
 
                 JsonObject? statsResponse = new JsonObject()

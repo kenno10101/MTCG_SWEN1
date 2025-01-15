@@ -10,14 +10,16 @@ public class Stat
     public readonly int Losses = 0;
     public readonly int Draws = 0;
     public readonly int Elo = 100;
+    public readonly Rank Rank;
 
-    public Stat(int battles_played, int wins, int losses, int draws, int elo)
+    public Stat(int battles_played, int wins, int losses, int draws, int elo, Rank rank)
     {
         Battles_played = battles_played;
         Wins = wins;
         Losses = losses;
         Draws = draws;
         Elo = elo;
+        Rank = rank;
     }
 
     public static async Task Create(string username)
