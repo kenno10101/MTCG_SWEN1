@@ -265,13 +265,17 @@ namespace MTCG_Project.Handler
                 int i = 1;
                 foreach (var entry in scoreboard)
                 {
+                    var entry_username = entry.Item1;
+                    var entry_stat = entry.Item2;
+
                     JsonObject? playerStat = new JsonObject();
-                    playerStat["username"] = entry.Item1;
-                    playerStat["elo"] = entry.Item2.Elo;
-                    playerStat["battles_played"] = entry.Item2.Battles_played;
-                    playerStat["wins"] = entry.Item2.Wins;
-                    playerStat["losses"] = entry.Item2.Losses;
-                    playerStat["draws"] = entry.Item2.Draws;
+                    playerStat["username"] = entry_username;
+                    playerStat["elo"] = entry_stat.Elo;
+                    playerStat["rank"] = entry_stat.Rank.ToString();
+                    playerStat["battles_played"] = entry_stat.Battles_played;
+                    playerStat["wins"] = entry_stat.Wins;
+                    playerStat["losses"] = entry_stat.Losses;
+                    playerStat["draws"] = entry_stat.Draws;
                     scoreboardObject.Add("rank_" + (i++), playerStat);
                 }
 
