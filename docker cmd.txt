@@ -1,0 +1,4 @@
+docker run -d --name postgresdb -e POSTGRES_USER=kenn -e POSTGRES_PASSWORD=kenn1234 -p 5431:5432 -v pgdata:/var/lib/postgresql/data postgres
+
+docker exec -it 5a956add3aa3 psql -U kenn -h localhost -p 5432
+docker exec -it postgresdb psql -U kenn -h localhost -p 5432
