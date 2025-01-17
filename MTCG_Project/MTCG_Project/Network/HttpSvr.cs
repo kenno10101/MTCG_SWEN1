@@ -34,7 +34,7 @@ namespace MTCG_Project.Network
             }
         }
         
-        private async void HandleClient(TcpClient client, byte[] buffer)
+        private async Task HandleClient(TcpClient client, byte[] buffer)
         {
             string data = string.Empty;
 
